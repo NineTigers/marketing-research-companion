@@ -697,7 +697,7 @@
                       <textarea id="sourceUrls" name="sourceUrls" placeholder="한 줄에 URL 하나"></textarea>
                     </div>
                     <div class="field">
-                      <label for="researchDepth">조사 깊이</label>
+                      <label for="researchDepth">조사 범위</label>
                       <select id="researchDepth" name="researchDepth">
                         <option value="quick">빠른 검토</option>
                         <option value="standard" selected>표준 조사</option>
@@ -1453,18 +1453,20 @@
         try {
           runtimeConfig = await fetchJson("/api/config?ts=" + Date.now(), {cache: "no-store"});
           const codex = runtimeConfig.mode === "codex";
-          const connected = Boolean(runtimeConfig.ready);
+          const ready = Boolean(runtimeConfig.ready);
           const account = runtimeConfig.runtime || {};
+          const accountConnected = account.accountType === "chatgpt";
           const accountLabel = [account.email, account.planType].filter(Boolean).join(" · ");
-          title.textContent = codex ? (connected ? "내 ChatGPT 계정으로 조사할 수 있습니다" : "ChatGPT 계정을 연결해 주세요") : "데모 분석 실행 가능";
-          copy.textContent = codex ? (connected ? ((accountLabel ? accountLabel + " · " : "") + "사용량과 권한은 연결된 계정에 적용됩니다.") : (account.reason || "브라우저 로그인 후 사용자의 Codex가 조사를 실행합니다.")) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
-          mode.textContent = codex ? (connected ? "CODEX" : "연결 필요") : "DEMO";
-          mode.classList.toggle("live", connected);
-          panel.classList.toggle("connected", connected);
-          metric.textContent = codex ? (connected ? "CODEX" : "연결 필요") : "DEMO";
-          top.innerHTML = '<span class="dot"></span>' + (connected ? "사용자 Codex 준비" : "ChatGPT 연결 필요");
-          connectChatGptButton.hidden = !codex || connected;
-          disconnectChatGptButton.hidden = !codex || !connected;
+          title.textContent = codex ? (ready ? "내 ChatGPT 계정으로 조사할 수 있습니다" : (accountConnected ? "고정 모델을 사용할 수 없습니다" : "ChatGPT 계정을 연결해 주세요")) : "데모 분석 실행 가능";
+          const modelLabel = runtimeConfig.model + " · " + runtimeConfig.reasoningEffort;
+          copy.textContent = codex ? (ready ? ((accountLabel ? accountLabel + " · " : "") + modelLabel + " · 사용량과 권한은 연결된 계정에 적용됩니다.") : (account.reason || "브라우저 로그인 후 사용자의 Codex가 " + modelLabel + " 설정으로 조사를 실행합니다.")) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
+          mode.textContent = codex ? (ready ? "TERRA · HIGH" : (accountConnected ? "모델 확인 필요" : "연결 필요")) : "DEMO";
+          mode.classList.toggle("live", ready);
+          panel.classList.toggle("connected", ready);
+          metric.textContent = codex ? (ready ? "TERRA/HIGH" : (accountConnected ? "모델 확인" : "연결 필요")) : "DEMO";
+          top.innerHTML = '<span class="dot"></span>' + (ready ? "Terra · high 준비" : (accountConnected ? "고정 모델 확인 필요" : "ChatGPT 연결 필요"));
+          connectChatGptButton.hidden = !codex || accountConnected;
+          disconnectChatGptButton.hidden = !codex || !accountConnected;
           runResearchButton.disabled = !runtimeConfig.ready;
         } catch (_) {
           runtimeConfig = null;
@@ -1570,7 +1572,8 @@
           "- 요청 업무: " + task.label,
           "- 필요한 결정: " + (data.decision || "미입력"),
           "- 배경/확인사항: " + context,
-          "- 조사 깊이: " + ({quick: "빠른 검토", standard: "표준 조사", deep: "심층 조사"}[data.depth] || "표준 조사"),
+          "- 조사 범위: " + ({quick: "빠른 검토", standard: "표준 조사", deep: "심층 조사"}[data.depth] || "표준 조사"),
+          "- 모델/추론 강도: gpt-5.6-terra / high",
           "- 제공 VOC: " + (data.vocText ? "있음" : "없음"),
           "- 우선 출처: " + (sourceUrls.length ? sourceUrls.length + "개" : "없음"),
           "",

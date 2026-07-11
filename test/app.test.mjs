@@ -38,14 +38,19 @@ function request(overrides = {}) {
   });
 }
 
-test("configuration defaults to the user's Codex without API secrets", async (t) => {
+test("configuration pins Terra high without API secrets", async (t) => {
   const root = await tempRoot(t);
   const config = loadConfig({rootDir: root, env: {CODEX_MODEL: "test-model"}});
   const visible = publicConfig(config, {connected: true});
   assert.equal(config.mode, "codex");
   assert.equal(visible.ready, true);
   assert.equal(visible.mode, "codex");
-  assert.equal(visible.model, "test-model");
+  assert.equal(visible.model, "gpt-5.6-terra");
+  assert.equal(visible.reasoningEffort, "high");
+  assert.equal(publicConfig(config, {connected: true, ready: false}).ready, false);
+  const job = createJobRecord(request(), config);
+  assert.equal(job.model, "gpt-5.6-terra");
+  assert.equal(job.reasoningEffort, "high");
   assert.equal("apiKey" in visible, false);
   assert.equal("baseUrl" in config, false);
   assert.equal(typeof resolveCodexBin(), "string");
@@ -103,19 +108,23 @@ test("Codex provider requests web evidence and structured output from the accoun
     if (calls.length === 2) return {data: demoReport};
     return {data: {sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}], report: demoReport}};
   }};
-  const provider = new CodexProvider({model: "test-model", rootDir: process.cwd()}, runtime);
+  const provider = new CodexProvider({model: "gpt-5.6-terra", reasoningEffort: "high", rootDir: process.cwd()}, runtime);
   const research = await provider.webResearch({kind: "market", request: request(), depth: "quick", signal: new AbortController().signal});
   assert.equal(research.text, "source-backed research");
   assert.deepEqual(research.sources.map((source) => source.url), ["https://example.com/source"]);
   assert.match(calls[0].prompt, /최신 웹 검색/);
   assert.equal(calls[0].outputSchema.required.includes("sources"), true);
+  assert.equal(calls[0].model, "gpt-5.6-terra");
+  assert.equal(calls[0].effort, "high");
   const report = await provider.synthesize({request: request(), research: {market: "m", competitor: "c", voc: "v"}, sources: research.sources, signal: new AbortController().signal});
   assert.equal(report.title, demoReport.title);
   assert.equal(calls[1].outputSchema.required.includes("commercialEstimate"), true);
+  assert.equal(calls[1].effort, "high");
   const full = await provider.fullResearch({request: request(), signal: new AbortController().signal});
   assert.equal(full.report.title, demoReport.title);
   assert.match(calls[2].prompt, /제품군을 조사 경계로 고정/);
   assert.equal(calls[2].outputSchema.required.includes("sources"), true);
+  assert.equal(calls[2].effort, "high");
 });
 
 test("HTTP onboarding reports and starts the user's ChatGPT OAuth flow", async (t) => {

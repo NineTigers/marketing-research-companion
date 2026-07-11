@@ -108,14 +108,14 @@ export async function createMarketingServer(options = {}) {
   const activeRuns = new Map();
 
   async function runtimeStatus() {
-    if (config.mode === "demo") return {installed: true, connected: true, accountType: "demo", email: null, planType: null, reason: null};
-    return runtime.status();
+    if (config.mode === "demo") return {installed: true, connected: true, ready: true, accountType: "demo", email: null, planType: null, reason: null};
+    return runtime.status({requiredModel: config.model});
   }
 
   async function requireConnected() {
     if (config.mode === "demo") return;
     const status = await runtimeStatus();
-    if (!status.connected) throw Object.assign(new Error(status.reason || "ChatGPT 계정을 먼저 연결해 주세요."), {statusCode: 401});
+    if (!status.ready) throw Object.assign(new Error(status.reason || "ChatGPT 계정과 고정 모델을 먼저 확인해 주세요."), {statusCode: status.connected ? 409 : 401});
   }
 
   async function startRun(request) {
@@ -137,7 +137,7 @@ export async function createMarketingServer(options = {}) {
       assertSameOrigin(req);
       if (pathname === "/api/health" && req.method === "GET") {
         const runtimeState = await runtimeStatus();
-        return json(res, 200, {ok: true, mode: config.mode, ready: runtimeState.connected, version: config.version, runtime: runtimeState});
+        return json(res, 200, {ok: true, mode: config.mode, ready: runtimeState.ready ?? runtimeState.connected, version: config.version, runtime: runtimeState});
       }
       if (pathname === "/api/config" && req.method === "GET") {
         const runtimeState = await runtimeStatus();

@@ -66,6 +66,11 @@ Codex에게 Git 링크와 함께 설치를 맡길 때 사용할 간단한 지시
 OAuth 시작만 요청하며 토큰을 읽거나 저장하지 않습니다. 조사마다 읽기 전용 Codex
 스레드를 만들고 JSON Schema로 결과 형식을 제한합니다.
 
+운영 모델은 `gpt-5.6-terra`, 추론 강도는 `high`로 고정합니다. 화면의 빠른·표준·심층
+선택은 모델이나 추론 강도를 낮추지 않고 조사 범위와 확인할 대안의 폭만 조절합니다.
+연결 계정에서 해당 모델을 사용할 수 없으면 다른 모델로 조용히 대체하지 않고 실행
+오류로 표시해야 합니다.
+
 ```text
 Browser -> local Node server -> Codex App Server -> user's ChatGPT account
                          |-> .data jobs and reports
