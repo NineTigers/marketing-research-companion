@@ -1,6 +1,6 @@
 {
   "name": "marketing-research-team",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "license": "MIT",
   "description": "Standalone marketing research, VOC analysis, and executive reporting application",
   "type": "module",
@@ -11,7 +11,7 @@
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "test": "node --test test",
-    "check": "node --check server.mjs && node --check lib/codex-bin.mjs && node --check lib/codex-runtime.mjs && node --check lib/provider.mjs && node --check scripts/service.mjs && node scripts/check-index.mjs",
+    "check": "node --check server.mjs && for file in lib/*.mjs scripts/*.mjs test/*.mjs; do node --check \"$file\" || exit 1; done && node scripts/check-index.mjs",
     "doctor": "node scripts/doctor.mjs",
     "service:install": "node scripts/service.mjs install",
     "service:status": "node scripts/service.mjs status",

@@ -11,6 +11,10 @@ import {createJobRecord, normalizeRequest, runResearchJob} from "../lib/workflow
 import {createMarketingServer, startMarketingServer} from "../server.mjs";
 import {createServer as createHttpServer} from "node:http";
 import {resolveCodexBin} from "../lib/codex-bin.mjs";
+import {calculateSalesEstimate} from "../lib/commercial-calculator.mjs";
+import {collectOfficialProductImages, extractProductImageCandidates} from "../lib/product-images.mjs";
+import {renderCharts} from "../lib/chart-renderer.mjs";
+import {CodexRuntime} from "../lib/codex-runtime.mjs";
 
 async function tempRoot(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketing-team-"));
@@ -34,6 +38,7 @@ function request(overrides = {}) {
     vocText: "세탁이 편해요\n높이가 조금 높아요",
     sourceUrls: [],
     depth: "quick",
+    chartPlan: [{evidenceId: "voc", evidenceLabel: "고객 VOC", chartType: "bar", chartLabel: "막대 차트"}],
     ...overrides
   });
 }
@@ -53,6 +58,8 @@ test("configuration pins Terra high without API secrets", async (t) => {
   const job = createJobRecord(request(), config);
   assert.equal(job.model, "gpt-5.6-terra");
   assert.equal(job.reasoningEffort, "high");
+  assert.equal(job.agents.find((agent) => agent.id === "scope").note, "");
+  assert.equal(job.agents.find((agent) => agent.id === "visual").note, "공식 제품 이미지만 수집");
   const fallbackVisible = publicConfig(config, {connected: true, ready: true, selectedModel: "gpt-5.5", fallbackUsed: true});
   assert.equal(fallbackVisible.model, "gpt-5.5");
   assert.equal(fallbackVisible.fallbackUsed, true);
@@ -68,6 +75,8 @@ test("request normalization rejects missing business scope", () => {
   assert.equal(request({sourceUrls: ["javascript:alert(1)", "https://example.com"]}).sourceUrls.length, 1);
   assert.equal(request().generateImages, false);
   assert.equal(request({generateImages: true}).generateImages, true);
+  assert.deepEqual(request().chartPlan.map(({evidenceId, chartType}) => ({evidenceId, chartType})), [{evidenceId: "voc", chartType: "bar"}]);
+  assert.equal(request({taskId: "unknown"}).taskId, "custom");
 });
 
 test("report renderer escapes user and model content", () => {
@@ -108,23 +117,37 @@ test("demo workflow persists a complete report", async (t) => {
   assert.equal(data.mode, "demo");
 });
 
-test("optional image generation stores and embeds a job asset", async (t) => {
+test("optional image generation pairs an official image with the same-product usage image", async (t) => {
   const root = await tempRoot(t);
   const config = demoConfig(root);
   const store = new FileStore({dataDir: config.dataDir, reportDir: config.reportDir});
   await store.init();
   const generatedPath = path.join(root, "generated.png");
+  const officialPath = path.join(root, "official.png");
   await writeFile(generatedPath, Buffer.from("89504e470d0a1a0a", "hex"));
+  await writeFile(officialPath, Buffer.from("89504e470d0a1a0a", "hex"));
   const provider = new DemoProvider();
-  provider.generateProductImage = async () => ({savedPath: generatedPath, revisedPrompt: "제품 사용 장면"});
+  const calls = [];
+  provider.generateProductUsageImage = async (input) => {
+    calls.push(input);
+    return {savedPath: generatedPath, revisedPrompt: "동일 제품 사용 장면"};
+  };
+  const imageCollector = async ({jobId, report, store: collectorStore}) => Promise.all(report.competitors.map(async (item, index) => {
+    const asset = await collectorStore.writeJobAssetBuffer(jobId, `competitor-${index + 1}-official.png`, await readFile(officialPath));
+    return {index, brand: item.brand, product: item.product, official: {url: `/api/jobs/${jobId}/assets/${asset.name}`, localPath: asset.path, originalUrl: "https://example.com/image.png", sourceUrl: "https://example.com/product", checkedAt: "2026-07-12"}, generated: null, warning: null};
+  }));
   const job = createJobRecord(request({generateImages: true}), config);
   await store.createJob(job);
-  await runResearchJob({jobId: job.id, store, provider, signal: new AbortController().signal});
+  await runResearchJob({jobId: job.id, store, provider, imageCollector, signal: new AbortController().signal});
   const completed = await store.getJob(job.id);
-  assert.match(completed.generatedImage.url, /\/assets\/proposal-image\.png$/);
+  assert.equal(completed.productVisuals.length, 3);
+  assert.match(completed.productVisuals[0].official.url, /competitor-1-official\.png$/);
+  assert.match(completed.productVisuals[0].generated.url, /competitor-1-generated\.png$/);
+  assert.equal("localPath" in completed.productVisuals[0].official, false);
+  assert.equal(calls[0].referenceImagePath, path.join(config.reportDir, job.id, "competitor-1-official.png"));
   assert.equal(completed.agents.find((agent) => agent.id === "visual").status, "completed");
-  assert.ok(await store.readJobAssetPath(job.id, "proposal-image.png"));
-  assert.match(await store.readReport(job.id), /proposal-visual/);
+  assert.ok(await store.readJobAssetPath(job.id, "competitor-1-generated.png"));
+  assert.match(await store.readReport(job.id), /동일 제품 사용 장면/);
 });
 
 test("Codex provider requests web evidence and structured output from the account runtime", async () => {
@@ -133,9 +156,9 @@ test("Codex provider requests web evidence and structured output from the accoun
   const imageCalls = [];
   const runtime = {listModels: async () => [{id: "gpt-5.5", model: "gpt-5.5"}], runStructured: async (input) => {
     calls.push(input);
-    if (calls.length === 1) return {data: {text: "source-backed research", sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}]}};
+    if (calls.length === 1) return {data: {text: "source-backed research", sources: [{url: "https://example.com/source", title: "Example", sourceType: "official", checkedAt: "2026-07-11"}]}};
     if (calls.length === 2) return {data: demoReport};
-    return {data: {sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}], report: demoReport}};
+    return {data: {sources: [{url: "https://example.com/source", title: "Example", sourceType: "official", checkedAt: "2026-07-11"}], report: demoReport}};
   }, runImageGeneration: async (input) => {
     imageCalls.push(input);
     return {savedPath: "/tmp/generated.png", status: "completed"};
@@ -162,10 +185,69 @@ test("Codex provider requests web evidence and structured output from the accoun
   assert.equal(calls[2].outputSchema.required.includes("sources"), true);
   assert.equal(calls[2].model, "gpt-5.5");
   assert.equal(calls[2].effort, "high");
-  await provider.generateProductImage({request: request(), report: demoReport, signal: new AbortController().signal});
+  await provider.generateProductUsageImage({request: request(), competitor: demoReport.competitors[0], referenceImagePath: "/tmp/official.png", signal: new AbortController().signal});
   assert.match(imageCalls[0].prompt, /이미지 생성 도구를 정확히 한 번/);
+  assert.deepEqual(imageCalls[0].referenceImagePaths, ["/tmp/official.png"]);
   assert.equal(imageCalls[0].model, "gpt-5.5");
   assert.equal(imageCalls[0].effort, "high");
+});
+
+test("sales estimates are deterministically back-calculated and verified", () => {
+  const estimate = calculateSalesEstimate({
+    method: "review_backcast", calculationInput: {currency: "KRW", periodMonths: 10, price: 40000, signalValue: 100, rateLow: 0.01, rateBase: 0.02, rateHigh: 0.04}
+  });
+  assert.equal(estimate.calculated.verified, true);
+  assert.equal(estimate.calculated.monthlyUnits.base, 500);
+  assert.equal(estimate.calculated.monthlyRevenue.base, 20000000);
+  assert.equal(estimate.formula, "리뷰수 ÷ 리뷰 작성률 ÷ 관측 개월 × 적용 가격");
+});
+
+test("official product image metadata is extracted, downloaded, and cached", async (t) => {
+  const root = await tempRoot(t);
+  const config = demoConfig(root);
+  const store = new FileStore({dataDir: config.dataDir, reportDir: config.reportDir});
+  await store.init();
+  const job = createJobRecord(request(), config);
+  await store.createJob(job);
+  const html = '<meta property="og:image" content="https://cdn.example.com/product.jpg"><script type="application/ld+json">{"@type":"Product","image":"https://cdn.example.com/product-2.jpg"}</script>';
+  assert.deepEqual(extractProductImageCandidates(html, "https://shop.example.com/item"), ["https://cdn.example.com/product.jpg", "https://cdn.example.com/product-2.jpg"]);
+  const fetchImpl = async (url) => String(url).includes("product.jpg")
+    ? new Response(Buffer.from("jpeg"), {status: 200, headers: {"content-type": "image/jpeg"}})
+    : new Response(html, {status: 200, headers: {"content-type": "text/html"}});
+  const report = {competitors: [{brand: "브랜드", product: "제품", productUrl: "https://shop.example.com/item", officialImageUrl: "https://cdn.example.com/product.jpg", checkedAt: "2026-07-12", officialImageCheckedAt: "2026-07-12"}]};
+  const visuals = await collectOfficialProductImages({jobId: job.id, report, store, fetchImpl, dnsLookup: async () => [{address: "93.184.216.34", family: 4}]});
+  assert.match(visuals[0].official.url, /competitor-1-official\.jpg$/);
+  assert.ok(await store.readJobAssetPath(job.id, "competitor-1-official.jpg"));
+});
+
+test("chart renderer produces escaped inline SVG", () => {
+  const html = renderCharts([{evidenceId: "voc", type: "bar", title: "<VOC>", unit: "%", note: "표본", sourceRefs: ["https://example.com"], points: [{label: "세탁", value: 40, secondaryValue: 0, low: 30, high: 50, group: "만족"}]}], () => "근거");
+  assert.match(html, /<svg/);
+  assert.match(html, /&lt;VOC&gt;/);
+  assert.equal(html.includes("<VOC>"), false);
+});
+
+test("Codex image turns include local official-image references", async () => {
+  const runtime = new CodexRuntime();
+  const calls = [];
+  runtime.getAccount = async () => ({type: "chatgpt"});
+  runtime.capabilities = async () => ({imageGeneration: true});
+  runtime.request = async (method, params) => {
+    calls.push({method, params});
+    if (method === "thread/start") return {thread: {id: "thread-1"}};
+    if (method === "turn/start") {
+      queueMicrotask(() => {
+        runtime.emit("item/completed", {threadId: "thread-1", turnId: "turn-1", item: {type: "imageGeneration", status: "completed", savedPath: "/tmp/generated.png"}});
+        runtime.emit("turn/completed", {threadId: "thread-1", turn: {id: "turn-1", status: "completed"}});
+      });
+      return {turn: {id: "turn-1"}};
+    }
+    throw new Error(`Unexpected method: ${method}`);
+  };
+  const result = await runtime.runImageGeneration({prompt: "같은 제품", referenceImagePaths: ["/tmp/official.png"], signal: new AbortController().signal});
+  const turn = calls.find((call) => call.method === "turn/start");
+  assert.deepEqual(turn.params.input, [{type: "text", text: "같은 제품"}, {type: "localImage", path: "/tmp/official.png"}]);
+  assert.equal(result.savedPath, "/tmp/generated.png");
 });
 
 test("HTTP onboarding reports and starts the user's ChatGPT OAuth flow", async (t) => {
