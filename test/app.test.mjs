@@ -76,6 +76,7 @@ test("request normalization rejects missing business scope", () => {
   assert.equal(request().generateImages, false);
   assert.equal(request({generateImages: true}).generateImages, true);
   assert.deepEqual(request().chartPlan.map(({evidenceId, chartType}) => ({evidenceId, chartType})), [{evidenceId: "voc", chartType: "bar"}]);
+  assert.equal(request({chartPlan: [{evidenceId: "custom:%EC%96%B4%EB%A6%B0%EC%9D%B4%EC%A7%91", evidenceLabel: "어린이집", chartType: "matrix", chartLabel: "평가 매트릭스"}]}).chartPlan[0].evidenceId.startsWith("custom:"), true);
   assert.equal(request({taskId: "unknown"}).taskId, "custom");
 });
 
