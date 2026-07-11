@@ -8,7 +8,8 @@ import {CodexProvider, DemoProvider} from "../lib/provider.mjs";
 import {escapeHtml, renderReport} from "../lib/report-renderer.mjs";
 import {FileStore} from "../lib/storage.mjs";
 import {createJobRecord, normalizeRequest, runResearchJob} from "../lib/workflow.mjs";
-import {createMarketingServer} from "../server.mjs";
+import {createMarketingServer, startMarketingServer} from "../server.mjs";
+import {createServer as createHttpServer} from "node:http";
 import {resolveCodexBin} from "../lib/codex-bin.mjs";
 
 async function tempRoot(t) {
@@ -209,4 +210,18 @@ test("HTTP API runs, persists, opens, retries, and deletes research", async (t) 
   const deleteResponse = await fetch(base + `/api/jobs/${job.id}`, {method: "DELETE"});
   assert.equal(deleteResponse.status, 200);
   assert.equal((await fetch(base + `/api/jobs/${job.id}`)).status, 404);
+});
+
+test("server selects and reports the next port when the preferred port is occupied", async (t) => {
+  const blocker = createHttpServer((_, response) => response.end("occupied"));
+  await new Promise((resolve) => blocker.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => blocker.close(resolve)));
+  const root = await tempRoot(t);
+  const config = demoConfig(root);
+  config.port = blocker.address().port;
+  const app = await startMarketingServer({config, provider: new DemoProvider()});
+  t.after(() => new Promise((resolve) => app.server.close(resolve)));
+  assert.equal(app.config.port, blocker.address().port + 1);
+  const runtime = JSON.parse(await readFile(path.join(config.dataDir, "runtime.json"), "utf8"));
+  assert.equal(runtime.url, `http://127.0.0.1:${app.config.port}`);
 });

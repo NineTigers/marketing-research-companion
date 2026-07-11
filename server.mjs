@@ -1,6 +1,6 @@
 import {createServer as createHttpServer} from "node:http";
 import {createReadStream} from "node:fs";
-import {stat} from "node:fs/promises";
+import {stat, writeFile} from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath, pathToFileURL} from "node:url";
 import {loadConfig, publicConfig} from "./lib/config.mjs";
@@ -239,13 +239,47 @@ export async function createMarketingServer(options = {}) {
   return {server, config, store, runtime};
 }
 
+export async function listenWithFallback(server, host, preferredPort, attempts = 20) {
+  let lastError;
+  for (let offset = 0; offset < attempts; offset += 1) {
+    const port = preferredPort + offset;
+    try {
+      await new Promise((resolve, reject) => {
+        const onError = (error) => {
+          server.off("listening", onListening);
+          reject(error);
+        };
+        const onListening = () => {
+          server.off("error", onError);
+          resolve();
+        };
+        server.once("error", onError);
+        server.once("listening", onListening);
+        server.listen(port, host);
+      });
+      return port;
+    } catch (error) {
+      lastError = error;
+      if (error.code !== "EADDRINUSE") throw error;
+    }
+  }
+  throw Object.assign(new Error(`${preferredPort}부터 ${attempts}개 포트를 확인했지만 사용할 수 없습니다.`), {cause: lastError});
+}
+
 export async function startMarketingServer(options = {}) {
   const app = await createMarketingServer(options);
-  await new Promise((resolve, reject) => {
-    app.server.once("error", reject);
-    app.server.listen(app.config.port, app.config.host, resolve);
-  });
-  console.log(`Marketing research team: http://${app.config.host}:${app.config.port} (${app.config.mode})`);
+  const preferredPort = app.config.port;
+  app.config.port = await listenWithFallback(app.server, app.config.host, preferredPort);
+  const url = `http://${app.config.host}:${app.config.port}`;
+  await writeFile(path.join(app.config.dataDir, "runtime.json"), JSON.stringify({
+    url,
+    pid: process.pid,
+    mode: app.config.mode,
+    startedAt: new Date().toISOString(),
+    preferredPort
+  }, null, 2) + "\n", {encoding: "utf8", mode: 0o600});
+  if (app.config.port !== preferredPort) console.warn(`Port ${preferredPort} is occupied; using ${app.config.port}.`);
+  console.log(`Marketing research team: ${url} (${app.config.mode})`);
   return app;
 }
 

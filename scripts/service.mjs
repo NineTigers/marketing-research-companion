@@ -36,6 +36,10 @@ async function macService() {
   }
   if (action === "status") {
     run("launchctl", ["print", `${domain}/${label}`]);
+    try {
+      const runtime = JSON.parse(await readFile(path.join(root, ".data", "runtime.json"), "utf8"));
+      if (runtime.url) console.log(`서비스 URL: ${runtime.url}`);
+    } catch (_) { /* Service may not have completed startup yet. */ }
     return;
   }
   await mkdir(dir, {recursive: true});
@@ -69,6 +73,10 @@ async function linuxService() {
   }
   if (action === "status") {
     run("systemctl", ["--user", "status", path.basename(file)]);
+    try {
+      const runtime = JSON.parse(await readFile(path.join(root, ".data", "runtime.json"), "utf8"));
+      if (runtime.url) console.log(`서비스 URL: ${runtime.url}`);
+    } catch (_) { /* Service may not have completed startup yet. */ }
     return;
   }
   await mkdir(dir, {recursive: true});
