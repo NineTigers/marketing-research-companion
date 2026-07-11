@@ -46,11 +46,16 @@ test("configuration pins Terra high without API secrets", async (t) => {
   assert.equal(visible.ready, true);
   assert.equal(visible.mode, "codex");
   assert.equal(visible.model, "gpt-5.6-terra");
+  assert.equal(visible.fallbackModel, "gpt-5.5");
+  assert.deepEqual(visible.modelCandidates, ["gpt-5.6-terra", "gpt-5.5"]);
   assert.equal(visible.reasoningEffort, "high");
   assert.equal(publicConfig(config, {connected: true, ready: false}).ready, false);
   const job = createJobRecord(request(), config);
   assert.equal(job.model, "gpt-5.6-terra");
   assert.equal(job.reasoningEffort, "high");
+  const fallbackVisible = publicConfig(config, {connected: true, ready: true, selectedModel: "gpt-5.5", fallbackUsed: true});
+  assert.equal(fallbackVisible.model, "gpt-5.5");
+  assert.equal(fallbackVisible.fallbackUsed, true);
   assert.equal("apiKey" in visible, false);
   assert.equal("baseUrl" in config, false);
   assert.equal(typeof resolveCodexBin(), "string");
@@ -102,28 +107,30 @@ test("demo workflow persists a complete report", async (t) => {
 test("Codex provider requests web evidence and structured output from the account runtime", async () => {
   const demoReport = await new DemoProvider().synthesize({request: request(), sources: []});
   const calls = [];
-  const runtime = {runStructured: async (input) => {
+  const runtime = {listModels: async () => [{id: "gpt-5.5", model: "gpt-5.5"}], runStructured: async (input) => {
     calls.push(input);
     if (calls.length === 1) return {data: {text: "source-backed research", sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}]}};
     if (calls.length === 2) return {data: demoReport};
     return {data: {sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}], report: demoReport}};
   }};
-  const provider = new CodexProvider({model: "gpt-5.6-terra", reasoningEffort: "high", rootDir: process.cwd()}, runtime);
+  const provider = new CodexProvider({model: "gpt-5.6-terra", fallbackModel: "gpt-5.5", modelCandidates: ["gpt-5.6-terra", "gpt-5.5"], reasoningEffort: "high", rootDir: process.cwd()}, runtime);
   const research = await provider.webResearch({kind: "market", request: request(), depth: "quick", signal: new AbortController().signal});
   assert.equal(research.text, "source-backed research");
   assert.deepEqual(research.sources.map((source) => source.url), ["https://example.com/source"]);
   assert.match(calls[0].prompt, /최신 웹 검색/);
   assert.equal(calls[0].outputSchema.required.includes("sources"), true);
-  assert.equal(calls[0].model, "gpt-5.6-terra");
+  assert.equal(calls[0].model, "gpt-5.5");
   assert.equal(calls[0].effort, "high");
   const report = await provider.synthesize({request: request(), research: {market: "m", competitor: "c", voc: "v"}, sources: research.sources, signal: new AbortController().signal});
   assert.equal(report.title, demoReport.title);
   assert.equal(calls[1].outputSchema.required.includes("commercialEstimate"), true);
+  assert.equal(calls[1].model, "gpt-5.5");
   assert.equal(calls[1].effort, "high");
   const full = await provider.fullResearch({request: request(), signal: new AbortController().signal});
   assert.equal(full.report.title, demoReport.title);
   assert.match(calls[2].prompt, /제품군을 조사 경계로 고정/);
   assert.equal(calls[2].outputSchema.required.includes("sources"), true);
+  assert.equal(calls[2].model, "gpt-5.5");
   assert.equal(calls[2].effort, "high");
 });
 

@@ -39,7 +39,8 @@ https://github.com/NineTigers/marketing-research-companion
    - Codex 설치 상태
    - 내 ChatGPT 계정 연결 여부
    - 조사 실행 가능 상태
-   - 고정 모델 `gpt-5.6-terra`와 추론 강도 `high`
+   - 우선 모델 `gpt-5.6-terra / high`, 미지원 시 대체 모델 `gpt-5.5 / high`
+   - 실제 선택된 모델과 대체 적용 여부
 10. ChatGPT 로그인이 필요하면 앱의 Codex 관리형 OAuth 흐름을 열어줘.
     로그인은 내가 브라우저에서 직접 완료하게 하고, 완료 후 연결된 계정을 다시 확인해줘.
 11. 서비스가 준비되면 아래 내용을 최종 보고해줘.

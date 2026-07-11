@@ -109,17 +109,19 @@ export async function createMarketingServer(options = {}) {
 
   async function runtimeStatus() {
     if (config.mode === "demo") return {installed: true, connected: true, ready: true, accountType: "demo", email: null, planType: null, reason: null};
-    return runtime.status({requiredModel: config.model});
+    return runtime.status({requiredModels: config.modelCandidates});
   }
 
   async function requireConnected() {
     if (config.mode === "demo") return;
     const status = await runtimeStatus();
     if (!status.ready) throw Object.assign(new Error(status.reason || "ChatGPT 계정과 고정 모델을 먼저 확인해 주세요."), {statusCode: status.connected ? 409 : 401});
+    return status;
   }
 
-  async function startRun(request) {
-    const job = createJobRecord(request, config);
+  async function startRun(request, runtimeState = null) {
+    const jobConfig = runtimeState?.selectedModel ? {...config, model: runtimeState.selectedModel} : config;
+    const job = createJobRecord(request, jobConfig);
     await store.createJob(job);
     const controller = new AbortController();
     activeRuns.set(job.id, controller);
@@ -179,9 +181,9 @@ export async function createMarketingServer(options = {}) {
       }
 
       if (pathname === "/api/research" && req.method === "POST") {
-        await requireConnected();
+        const runtimeState = await requireConnected();
         const request = normalizeRequest(await readJson(req, config.maxBodyBytes));
-        const job = await startRun(request);
+        const job = await startRun(request, runtimeState);
         return json(res, 202, {job: publicJob(job)});
       }
 
@@ -210,10 +212,10 @@ export async function createMarketingServer(options = {}) {
 
       const retryMatch = pathname.match(/^\/api\/jobs\/([a-zA-Z0-9_-]{8,80})\/retry$/);
       if (retryMatch && req.method === "POST") {
-        await requireConnected();
+        const runtimeState = await requireConnected();
         const previous = await store.getJob(retryMatch[1]);
         if (!previous) return json(res, 404, {error: "업무를 찾을 수 없습니다."});
-        const job = await startRun(previous.request);
+        const job = await startRun(previous.request, runtimeState);
         return json(res, 202, {job: publicJob(job)});
       }
 
