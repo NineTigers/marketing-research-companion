@@ -1,0 +1,7 @@
+.env
+.data
+.git
+.github
+node_modules
+render-check-*.png
+*.log

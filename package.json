@@ -1,0 +1,21 @@
+{
+  "name": "marketing-research-team",
+  "version": "2.0.0",
+  "license": "MIT",
+  "description": "Standalone marketing research, VOC analysis, and executive reporting application",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test test",
+    "check": "node --check server.mjs && node --check lib/codex-bin.mjs && node --check lib/codex-runtime.mjs && node --check lib/provider.mjs && node --check scripts/service.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "service:install": "node scripts/service.mjs install",
+    "service:status": "node scripts/service.mjs status",
+    "service:uninstall": "node scripts/service.mjs uninstall",
+    "release:export": "node scripts/export-release.mjs"
+  }
+}

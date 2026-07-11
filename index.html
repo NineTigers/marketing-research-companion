@@ -1,0 +1,1859 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="육아용품 신제품 리서치를 위한 마케팅팀 업무 지시 및 대표 보고 보드">
+  <title>마케팅팀 업무 지시·보고 보드</title>
+  <style>
+    :root {
+      --ink: #18221d;
+      --muted: #65716a;
+      --paper: #f4f6f4;
+      --surface: #ffffff;
+      --surface-2: #edf2ef;
+      --line: #d5ded8;
+      --nav: #17261f;
+      --nav-soft: #24372e;
+      --green: #1f6d5c;
+      --green-soft: #e4f1ec;
+      --coral: #c9533c;
+      --coral-soft: #f8e9e5;
+      --blue: #315f87;
+      --blue-soft: #e7eef5;
+      --amber: #96621e;
+      --amber-soft: #f7eddc;
+      --danger: #a43e3e;
+      --shadow: 0 12px 28px rgba(25, 42, 33, .08);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      line-height: 1.55;
+      letter-spacing: 0;
+    }
+    button, input, select, textarea { font: inherit; letter-spacing: 0; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(49, 95, 135, .28);
+      outline-offset: 2px;
+    }
+    a { color: inherit; }
+    .app-shell { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 24px 18px;
+      color: #f5f8f5;
+      background: var(--nav);
+      overflow-y: auto;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: #f4c85a;
+      color: #17261f;
+      font-weight: 900;
+      font-size: 18px;
+    }
+    .brand strong { display: block; font-size: 16px; }
+    .brand small { color: #afc1b6; }
+    .nav-label {
+      margin: 18px 10px 8px;
+      color: #89a195;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .sidebar nav { display: grid; gap: 4px; }
+    .workflow-nav { display: grid; gap: 4px; }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 9px 11px;
+      border-radius: 6px;
+      color: #dfe9e3;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 680;
+    }
+    .sidebar nav a:hover, .sidebar nav a.active { background: var(--nav-soft); color: #fff; }
+    .nav-index { width: 24px; color: #8fa99b; font-size: 12px; }
+    .reference-nav { margin-top: 12px; border-top: 1px solid rgba(255,255,255,.1); padding-top: 10px; }
+    .reference-nav summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 38px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #aabbb1;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      list-style: none;
+    }
+    .reference-nav summary::-webkit-details-marker { display: none; }
+    .reference-nav summary::after { content: "+"; color: #89a195; font-size: 17px; font-weight: 500; }
+    .reference-nav[open] summary::after { content: "−"; }
+    .reference-nav summary:hover { background: rgba(255,255,255,.05); color: #fff; }
+    .reference-links { display: grid; gap: 3px; margin-top: 3px; }
+    .reference-links a { min-height: 36px !important; padding-left: 16px !important; color: #b9c9c0 !important; font-size: 12px !important; }
+    .reference-links a::before { content: ""; width: 5px; height: 5px; margin-right: 10px; border-radius: 50%; background: #71877b; }
+    .reference-links a.active { color: #fff !important; }
+    .sidebar-foot {
+      margin-top: 22px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--radius);
+      color: #cad7cf;
+      font-size: 12px;
+    }
+    .sidebar-foot strong { display: block; margin-bottom: 4px; color: #fff; }
+    .main { min-width: 0; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 70px;
+      padding: 12px 30px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(244, 246, 244, .94);
+      backdrop-filter: blur(12px);
+    }
+    .topbar-title strong { display: block; font-size: 16px; }
+    .topbar-title span { color: var(--muted); font-size: 12px; }
+    .status-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .content { width: min(1460px, 100%); margin: 0 auto; padding: 28px 30px 72px; }
+    .section { scroll-margin-top: 88px; padding: 28px 0 34px; border-bottom: 1px solid var(--line); }
+    .section:last-child { border-bottom: 0; }
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+    .section-heading h2 { margin: 0 0 5px; font-size: 26px; line-height: 1.2; }
+    .section-heading p { max-width: 780px; margin: 0; color: var(--muted); font-size: 14px; }
+    .eyebrow { margin: 0 0 7px; color: var(--green); font-size: 12px; font-weight: 850; }
+    .command-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(330px, .8fr); gap: 18px; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .command-panel { padding: 22px; }
+    .command-title { display: flex; align-items: start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .command-title h1 { margin: 0 0 5px; font-size: 28px; line-height: 1.18; }
+    .command-title p { margin: 0; color: var(--muted); font-size: 14px; }
+    .decision-chip {
+      flex: 0 0 auto;
+      padding: 7px 9px;
+      border: 1px solid #bcd8cd;
+      border-radius: 999px;
+      color: var(--green);
+      background: var(--green-soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .field { display: grid; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    .field label { font-size: 12px; font-weight: 800; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      border: 1px solid #c9d4cd;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 10px 11px;
+    }
+    .field textarea { min-height: 92px; resize: vertical; }
+    .field input::placeholder, .field textarea::placeholder { color: #929c96; }
+    .custom-entry {
+      display: grid;
+      gap: 6px;
+      margin-top: 2px;
+      padding: 10px;
+      border: 1px dashed #b9c8bf;
+      border-radius: 6px;
+      background: #f7faf8;
+    }
+    .custom-entry[hidden] { display: none; }
+    .custom-entry label { font-size: 11px; }
+    .custom-hint { color: var(--muted); font-size: 10px; }
+    .required-set { margin: 17px 0 0; padding: 0; border: 0; }
+    .required-set legend { margin-bottom: 8px; font-size: 12px; font-weight: 800; }
+    .check-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #f9fbfa;
+      color: #344139;
+      font-size: 12px;
+      font-weight: 650;
+    }
+    .check-item input { width: 16px; height: 16px; accent-color: var(--green); }
+    .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--ink);
+      font-weight: 780;
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { border-color: #9eaaa2; background: #f6f8f7; }
+    .btn.primary { border-color: var(--green); background: var(--green); color: white; }
+    .btn.primary:hover { background: #185a4c; }
+    .btn.danger { color: var(--danger); }
+    .menu-panel { overflow: hidden; }
+    .menu-panel-head {
+      min-height: 142px;
+      padding: 20px;
+      color: white;
+      background: #29483b url("./toddler-transition-hero.png") right center/52% auto no-repeat;
+      position: relative;
+    }
+    .menu-panel-head::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(23, 38, 31, .58);
+    }
+    .menu-panel-head > div { position: relative; z-index: 1; max-width: 72%; }
+    .menu-panel-head h2 { margin: 0 0 8px; font-size: 21px; }
+    .menu-panel-head p { margin: 0; color: #e2ebe6; font-size: 13px; }
+    .quick-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .menu-item {
+      min-height: 112px;
+      padding: 15px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+    }
+    .menu-item:nth-child(2n) { border-right: 0; }
+    .menu-item:nth-last-child(-n+2) { border-bottom: 0; }
+    .menu-item:hover { background: #f4f8f6; }
+    .menu-item b { display: block; margin-bottom: 5px; font-size: 14px; }
+    .menu-item span { display: block; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .menu-number { color: var(--coral); font-size: 11px; font-weight: 900; }
+    .summary-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .metric {
+      min-height: 94px;
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .metric strong { display: block; margin-bottom: 4px; font-size: 24px; line-height: 1.1; }
+    .metric span { color: var(--muted); font-size: 12px; }
+    .order-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-btn.active { border-color: var(--green); color: var(--green); background: var(--green-soft); }
+    .order-list { display: grid; gap: 10px; }
+    .order-row {
+      display: grid;
+      grid-template-columns: 110px minmax(180px, 1fr) minmax(190px, 1.1fr) 142px auto;
+      gap: 14px;
+      align-items: center;
+      min-height: 76px;
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .order-code { color: var(--muted); font-size: 11px; font-weight: 800; }
+    .order-main strong, .order-task strong { display: block; font-size: 14px; }
+    .order-main span, .order-task span { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+    .order-status select { width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 12px; }
+    .order-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 850;
+    }
+    .icon-btn:hover { background: #f2f5f3; }
+    .research-options { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: 6px; background: #f8faf9; }
+    .research-options summary { padding: 10px 12px; color: #354139; font-size: 12px; font-weight: 850; cursor: pointer; }
+    .research-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 2px 12px 12px; }
+    .research-options-grid .field:last-child { grid-column: 1 / -1; }
+    .runtime-panel { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 16px; margin-bottom: 14px; padding: 14px 16px; border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: var(--radius); background: var(--surface); }
+    .runtime-panel.connected { border-left-color: var(--green); }
+    .runtime-panel strong { display: block; font-size: 14px; }
+    .runtime-panel span { color: var(--muted); font-size: 11px; }
+    .runtime-actions { display: flex; gap: 7px; align-items: center; }
+    .runtime-mode { padding: 6px 9px; border-radius: 999px; color: var(--amber); background: var(--amber-soft); font-size: 11px; font-weight: 850; }
+    .runtime-mode.live { color: var(--green); background: var(--green-soft); }
+    .run-list { display: grid; gap: 12px; }
+    .run-row { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+    .run-head { display: grid; grid-template-columns: 100px minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+    .run-code { color: var(--muted); font-size: 10px; font-weight: 850; }
+    .run-title strong { display: block; font-size: 15px; }
+    .run-title span { display: block; color: var(--muted); font-size: 11px; }
+    .run-state { padding: 5px 8px; border-radius: 999px; background: var(--surface-2); color: #435149; font-size: 10px; font-weight: 850; }
+    .run-state.running { color: var(--blue); background: var(--blue-soft); }
+    .run-state.completed, .run-state.completed_with_warnings { color: var(--green); background: var(--green-soft); }
+    .run-state.failed, .run-state.interrupted { color: var(--danger); background: var(--coral-soft); }
+    .agent-progress { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; margin-top: 14px; }
+    .agent-step { min-width: 0; padding: 8px 5px; border: 1px solid var(--line); border-radius: 5px; background: #fafbfa; text-align: center; }
+    .agent-step b { display: block; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+    .agent-step span { display: block; margin-top: 2px; color: #8a948e; font-size: 8px; }
+    .agent-step.running { border-color: #9db8d0; background: var(--blue-soft); }
+    .agent-step.completed { border-color: #afd1c3; background: var(--green-soft); }
+    .agent-step.warning { border-color: #dfc58d; background: var(--amber-soft); }
+    .agent-step.failed, .agent-step.interrupted { border-color: #dfb1a8; background: var(--coral-soft); }
+    .run-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--line); }
+    .run-note { color: var(--muted); font-size: 11px; }
+    .run-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .run-actions button, .run-actions a { min-height: 32px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 5px; background: #fff; color: var(--ink); font-size: 10px; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .run-actions a { color: #fff; border-color: var(--green); background: var(--green); }
+    .empty-state {
+      padding: 34px;
+      border: 1px dashed #b9c6be;
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255,255,255,.55);
+    }
+    .team-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .team-card {
+      min-height: 178px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--green);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .team-card.strategy { border-top-color: var(--blue); }
+    .team-card.teacher { border-top-color: var(--coral); }
+    .team-card h3 { margin: 0 0 7px; font-size: 17px; }
+    .team-card p { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+    .role-list { display: grid; gap: 5px; color: #3f4c45; font-size: 12px; }
+    .role-list span::before { content: ""; display: inline-block; width: 5px; height: 5px; margin-right: 7px; border-radius: 50%; background: var(--green); vertical-align: 2px; }
+    .report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .report-card {
+      display: grid;
+      grid-template-columns: 172px minmax(0, 1fr);
+      min-height: 190px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .report-card img { width: 100%; height: 100%; min-height: 190px; object-fit: cover; background: #e7ece8; }
+    .report-mark { display: grid; place-items: center; min-height: 190px; padding: 24px; background: #1f3a2d; color: #fff; font-size: 13px; font-weight: 900; }
+    .report-copy { display: flex; flex-direction: column; padding: 17px; }
+    .report-copy .report-type { color: var(--green); font-size: 11px; font-weight: 850; }
+    .report-copy h3 { margin: 5px 0 7px; font-size: 17px; line-height: 1.3; }
+    .report-copy p { margin: 0; color: var(--muted); font-size: 12px; }
+    .report-meta { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+    .tag { padding: 4px 6px; border: 1px solid var(--line); border-radius: 999px; background: #f5f7f6; color: #516058; font-size: 10px; font-weight: 750; }
+    .report-links { display: flex; gap: 7px; margin-top: auto; padding-top: 10px; }
+    .chart-studio { display: grid; grid-template-columns: minmax(280px, .72fr) minmax(0, 1.28fr); gap: 18px; }
+    .chart-controls { padding: 20px; }
+    .chart-controls h3 { margin: 0 0 6px; font-size: 19px; }
+    .chart-controls > p { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+    .chart-type-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+    .chart-type-btn {
+      min-height: 66px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+    .chart-type-btn:hover { background: #f4f8f6; }
+    .chart-type-btn.active { border-color: var(--green); background: var(--green-soft); }
+    .chart-type-btn b { display: block; margin-bottom: 3px; font-size: 12px; }
+    .chart-type-btn span { display: block; color: var(--muted); font-size: 10px; line-height: 1.35; }
+    .recommendation-box { margin-top: 14px; padding: 12px; border-left: 4px solid var(--coral); background: var(--coral-soft); }
+    .recommendation-box b { display: block; margin-bottom: 4px; font-size: 12px; }
+    .recommendation-box p { margin: 0; color: #6c4037; font-size: 11px; }
+    .chart-preview-panel { min-width: 0; overflow: hidden; }
+    .chart-preview-head { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 18px 20px 0; }
+    .chart-preview-head h3 { margin: 0 0 4px; font-size: 19px; }
+    .chart-preview-head p { margin: 0; color: var(--muted); font-size: 11px; }
+    .chart-badge { flex: 0 0 auto; padding: 5px 8px; border-radius: 999px; color: var(--blue); background: var(--blue-soft); font-size: 10px; font-weight: 850; }
+    .chart-canvas-wrap { padding: 12px 18px 4px; }
+    .chart-canvas {
+      display: block;
+      width: 100%;
+      height: 340px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fbfcfb;
+    }
+    .chart-caption { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 10px 20px 18px; }
+    .chart-caption p { margin: 0; color: #3e4b44; font-size: 12px; }
+    .chart-caption small { color: var(--muted); font-size: 10px; text-align: right; }
+    .saved-chart-plan { margin-top: 18px; }
+    .saved-chart-plan h3 { margin: 0 0 10px; font-size: 17px; }
+    .chart-plan-table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); background: var(--surface); }
+    .chart-plan-table th, .chart-plan-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; font-size: 11px; }
+    .chart-plan-table th { background: var(--surface-2); font-weight: 850; }
+    .chart-plan-table tr:last-child td { border-bottom: 0; }
+    .chart-plan-table td:nth-child(2) { color: var(--green); font-weight: 850; }
+    .chart-plan-table button { border: 0; background: transparent; color: var(--danger); cursor: pointer; font-size: 11px; font-weight: 750; }
+    .chart-gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .chart-sample { overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+    .chart-sample-head { padding: 13px 14px 8px; }
+    .chart-sample-head b { display: block; font-size: 13px; }
+    .chart-sample-head span { color: var(--muted); font-size: 10px; }
+    .chart-sample canvas { display: block; width: calc(100% - 20px); height: 150px; margin: 0 10px 10px; border-radius: 4px; background: #fbfcfb; }
+    .quality-layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(290px, .7fr); gap: 18px; }
+    .quality-table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); background: var(--surface); }
+    .quality-table th, .quality-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; font-size: 12px; }
+    .quality-table th { background: var(--surface-2); font-weight: 850; }
+    .quality-table tr:last-child td { border-bottom: 0; }
+    .quality-table td:first-child { width: 24%; font-weight: 780; }
+    .quality-state { color: var(--green); font-weight: 850; }
+    .quality-note { padding: 19px; border: 1px solid #e2c89a; border-radius: var(--radius); background: var(--amber-soft); }
+    .quality-note h3 { margin: 0 0 9px; font-size: 17px; }
+    .quality-note p { margin: 0 0 12px; color: #66502d; font-size: 12px; }
+    .quality-note ul { margin: 0; padding-left: 18px; color: #5b4a2f; font-size: 12px; }
+    .quality-note li { margin: 0 0 7px; }
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 80;
+      max-width: min(380px, calc(100vw - 40px));
+      padding: 12px 14px;
+      border: 1px solid #b8d1c7;
+      border-radius: 7px;
+      background: #173d33;
+      color: white;
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: .2s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    dialog {
+      width: min(760px, calc(100% - 28px));
+      max-height: min(82vh, 900px);
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 64px rgba(18, 34, 25, .25);
+    }
+    dialog::backdrop { background: rgba(15, 25, 20, .58); }
+    .modal-head { display: flex; align-items: start; justify-content: space-between; gap: 18px; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .modal-head h2 { margin: 0 0 4px; font-size: 21px; }
+    .modal-head p { margin: 0; color: var(--muted); font-size: 12px; }
+    .close-btn { width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; font-weight: 850; }
+    .brief { max-height: 58vh; overflow-y: auto; padding: 20px; white-space: pre-wrap; color: #29352f; background: #fbfcfb; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; line-height: 1.7; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); }
+    .mobile-menu { display: none; }
+    @media (max-width: 1100px) {
+      .app-shell { grid-template-columns: 210px minmax(0, 1fr); }
+      .command-grid, .quality-layout, .chart-studio { grid-template-columns: 1fr; }
+      .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .report-card { grid-template-columns: 140px minmax(0, 1fr); }
+      .team-grid, .chart-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 760px) {
+      .app-shell { display: block; }
+      .sidebar { position: fixed; z-index: 60; width: min(280px, 84vw); transform: translateX(-100%); transition: transform .2s ease; }
+      body.nav-open .sidebar { transform: translateX(0); }
+      body.nav-open::after { content: ""; position: fixed; z-index: 50; inset: 0; background: rgba(9, 18, 13, .5); }
+      .mobile-menu { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; }
+      .topbar { padding: 10px 14px; }
+      .topbar-title { flex: 1; }
+      .topbar-title strong { font-size: 0; white-space: nowrap; }
+      .topbar-title strong::after { content: "마케팅팀 업무 보드"; font-size: 15px; }
+      .topbar-title span, .topbar .status-row { display: none; }
+      .content { padding: 16px 14px 56px; }
+      .section { padding: 22px 0 28px; }
+      .section-heading { align-items: start; flex-direction: column; gap: 10px; }
+      .command-panel { padding: 16px; }
+      .command-title { display: block; }
+      .decision-chip { display: inline-flex; margin-top: 10px; }
+      .form-grid, .check-grid, .team-grid, .report-grid, .summary-strip, .chart-gallery { grid-template-columns: 1fr; }
+      .quick-menu { grid-template-columns: 1fr; }
+      .menu-item { border-right: 0; }
+      .menu-item:nth-last-child(2) { border-bottom: 1px solid var(--line); }
+      .menu-panel-head > div { max-width: 88%; }
+      .actions { display: grid; grid-template-columns: 1fr 1fr; }
+      .order-row { grid-template-columns: 1fr; gap: 8px; }
+      .research-options-grid, .run-head { grid-template-columns: 1fr; }
+      .runtime-panel { grid-template-columns: 1fr; }
+      .runtime-actions { justify-content: flex-start; }
+      .research-options-grid .field:last-child { grid-column: auto; }
+      .agent-progress { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .run-foot { align-items: flex-start; flex-direction: column; }
+      .order-actions { justify-content: flex-end; }
+      .report-card { grid-template-columns: 1fr; }
+      .report-card img { height: 170px; min-height: 0; }
+      .quality-table { display: block; overflow-x: auto; }
+      .chart-type-grid { grid-template-columns: 1fr 1fr; }
+      .chart-canvas { height: 260px; }
+      .chart-caption { grid-template-columns: 1fr; }
+      .chart-caption small { text-align: left; }
+      .chart-plan-table { display: block; overflow-x: auto; }
+    }
+    @media print {
+      .sidebar, .topbar, .actions, .order-toolbar, .order-actions, .mobile-menu { display: none !important; }
+      .app-shell { display: block; }
+      .content { padding: 0; }
+      .panel, .team-card, .report-card, .metric { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="주요 메뉴">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">M</div>
+        <div><strong>마케팅팀</strong><small>신제품 리서치 데스크</small></div>
+      </div>
+      <p class="nav-label">대표 업무 흐름</p>
+      <nav>
+        <div class="workflow-nav">
+          <a class="active" href="#command"><span class="nav-index">01</span>업무 지시</a>
+          <a href="#runs"><span class="nav-index">02</span>조사 진행</a>
+          <a href="#orders"><span class="nav-index">03</span>지시 보관</a>
+          <a href="#charts"><span class="nav-index">04</span>차트 요청</a>
+          <a href="#reports"><span class="nav-index">05</span>대표 보고서</a>
+        </div>
+        <details class="reference-nav" id="operatingMenu">
+          <summary>운영 참고</summary>
+          <div class="reference-links">
+            <a href="#quality">제출 기준</a>
+            <a href="#team">담당 조직</a>
+          </div>
+        </details>
+      </nav>
+      <p class="nav-label">운영 상태</p>
+      <div class="sidebar-foot">
+        <strong>육아용품 전담 체계 가동</strong>
+        시장·VOC·상품개발·유통·실제품 검증을 한 흐름으로 관리합니다.
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobileMenu" type="button" aria-label="메뉴 열기">≡</button>
+        <div class="topbar-title">
+          <strong>마케팅팀 업무 지시·보고 보드</strong>
+          <span>대표 지시에서 최종 보고서까지 한 화면에서 관리</span>
+        </div>
+        <div class="status-row">
+          <span class="status" id="runtimeStatus"><span class="dot"></span>실행 엔진 확인 중</span>
+          <span class="status" id="currentDate">기준일 확인 중</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="section" id="command">
+          <div class="runtime-panel" id="runtimePanel">
+            <div><strong id="runtimePanelTitle">사용자 Codex 연결 확인 중</strong><span id="runtimePanelCopy">ChatGPT 계정 상태를 확인하고 있습니다.</span></div>
+            <div class="runtime-actions">
+              <button class="btn primary" type="button" id="connectChatGpt" hidden>ChatGPT로 연결</button>
+              <button class="btn" type="button" id="disconnectChatGpt" hidden>연결 해제</button>
+            </div>
+            <span class="runtime-mode" id="runtimeMode">확인 중</span>
+          </div>
+          <div class="command-grid">
+            <form class="panel command-panel" id="workForm">
+              <div class="command-title">
+                <div>
+                  <p class="eyebrow">대표 업무 지시</p>
+                  <h1>무엇을 판단하면 될까요?</h1>
+                  <p>제품과 고객, 내려야 할 결정만 적으면 담당팀과 필수 조사 항목을 정리합니다.</p>
+                </div>
+                <span class="decision-chip">사업 판단 중심</span>
+              </div>
+
+              <div class="form-grid">
+                <div class="field">
+                  <label for="product">제품 또는 제품군</label>
+                  <input id="product" name="product" required placeholder="예: 토들러 낮잠 베개">
+                </div>
+                <div class="field">
+                  <label for="stage">고객 단계</label>
+                  <select id="stage" name="stage" required>
+                    <option value="">선택</option>
+                    <option>임신·출산 준비</option>
+                    <option>신생아 0~3개월</option>
+                    <option>영아 4~11개월</option>
+                    <option>돌 전후 12~23개월</option>
+                    <option>토들러 24~47개월</option>
+                    <option>키즈 4~7세</option>
+                    <option>선물 구매자</option>
+                    <option>리테일·유통 바이어</option>
+                    <option value="__custom__">직접 입력</option>
+                  </select>
+                  <div class="custom-entry" id="customStageWrap" hidden>
+                    <label for="customStage">고객 단계 직접 입력</label>
+                    <input id="customStage" placeholder="예: 36개월 어린이집 첫 낮잠 준비">
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="taskType">요청 업무</label>
+                  <select id="taskType" name="taskType" required>
+                    <option value="">오른쪽 메뉴에서 선택하거나 직접 선택</option>
+                    <option value="voc">VOC 기반 상품 개발</option>
+                    <option value="market">시장·경쟁 제품 분석</option>
+                    <option value="md">MD 소싱 1차 검토</option>
+                    <option value="distribution">타사 제품 유통 검토</option>
+                    <option value="recommendation">고객 맞춤 제품 추천</option>
+                    <option value="evidence">실제 제품 근거 검증</option>
+                    <option value="__custom__">직접 입력</option>
+                  </select>
+                  <div class="custom-entry" id="customTaskWrap" hidden>
+                    <label for="customTask">요청 업무 직접 입력</label>
+                    <input id="customTask" placeholder="예: 어린이집 납품용 B2B 상품성 검토">
+                    <span class="custom-hint">입력한 업무명은 지시서와 진행 현황에 그대로 반영됩니다.</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="decision">필요한 결정</label>
+                  <select id="decision" name="decision" required>
+                    <option value="">선택</option>
+                    <option>개발 진행 여부</option>
+                    <option>소싱 후보 선정</option>
+                    <option>유통 파일럿 승인</option>
+                    <option>제품 추천안 승인</option>
+                    <option>가격 포지션 승인</option>
+                    <option>런칭 테스트 승인</option>
+                    <option>보류 또는 중단 판단</option>
+                    <option value="__custom__">직접 입력</option>
+                  </select>
+                  <div class="custom-entry" id="customDecisionWrap" hidden>
+                    <label for="customDecision">필요한 결정 직접 입력</label>
+                    <input id="customDecision" placeholder="예: B2B 샘플 제작 여부">
+                  </div>
+                </div>
+                <div class="field full">
+                  <label for="context">배경과 특히 확인할 점</label>
+                  <textarea id="context" name="context" placeholder="예: 24개월 이상 어린이집 낮잠용으로 개발 가능한지, 반복 VOC와 경쟁사 예상 매출을 함께 보고 싶음"></textarea>
+                </div>
+                <details class="research-options">
+                  <summary>조사 자료 및 실행 깊이</summary>
+                  <div class="research-options-grid">
+                    <div class="field">
+                      <label for="vocText">고객 리뷰·VOC 원문</label>
+                      <textarea id="vocText" name="vocText" placeholder="리뷰, 상담 기록, 인터뷰 문장을 그대로 입력"></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="sourceUrls">우선 확인할 출처 URL</label>
+                      <textarea id="sourceUrls" name="sourceUrls" placeholder="한 줄에 URL 하나"></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="researchDepth">조사 깊이</label>
+                      <select id="researchDepth" name="researchDepth">
+                        <option value="quick">빠른 검토</option>
+                        <option value="standard" selected>표준 조사</option>
+                        <option value="deep">심층 조사</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="marketRegion">시장 범위</label>
+                      <select id="marketRegion" name="marketRegion">
+                        <option>대한민국 우선, 글로벌 벤치마크 보완</option>
+                        <option>대한민국 시장만</option>
+                        <option>글로벌 시장</option>
+                      </select>
+                    </div>
+                  </div>
+                </details>
+              </div>
+
+              <fieldset class="required-set">
+                <legend>이번 보고에 반드시 포함할 근거</legend>
+                <div class="check-grid">
+                  <label class="check-item"><input type="checkbox" name="evidence" value="고객 VOC" checked>고객 VOC</label>
+                  <label class="check-item"><input type="checkbox" name="evidence" value="경쟁 제품">경쟁 제품</label>
+                  <label class="check-item"><input type="checkbox" name="evidence" value="예상 매출 산식">예상 매출 산식</label>
+                  <label class="check-item"><input type="checkbox" name="evidence" value="실제 제품 판매 근거">실제 제품 판매 근거</label>
+                  <label class="check-item"><input type="checkbox" name="evidence" value="연령·안전 경계">연령·안전 경계</label>
+                  <label class="check-item"><input type="checkbox" name="evidence" value="자사 상품 제안">자사 상품 제안</label>
+                </div>
+              </fieldset>
+
+              <div class="actions">
+                <button class="btn" type="button" id="previewBrief">지시서 미리보기</button>
+                <button class="btn" type="submit">지시 보관</button>
+                <button class="btn primary" type="button" id="runResearch">조사 실행</button>
+              </div>
+            </form>
+
+            <aside class="panel menu-panel" aria-label="빠른 업무 메뉴">
+              <div class="menu-panel-head">
+                <div>
+                  <h2>빠른 업무 메뉴</h2>
+                  <p>결정 목적에 가장 가까운 항목을 누르면 업무 지시서가 자동으로 맞춰집니다.</p>
+                </div>
+              </div>
+              <div class="quick-menu">
+                <button class="menu-item" type="button" data-task="voc">
+                  <span class="menu-number">01</span><b>VOC에서 상품 제안까지</b><span>불만·만족 키워드를 스펙, 가격, 테스트안으로 전환</span>
+                </button>
+                <button class="menu-item" type="button" data-task="market">
+                  <span class="menu-number">02</span><b>시장·경쟁 분석</b><span>트렌드, 가격대, 경쟁력, 매출 추정, 진입 기회 확인</span>
+                </button>
+                <button class="menu-item" type="button" data-task="md">
+                  <span class="menu-number">03</span><b>MD 소싱 1차 검토</b><span>수요, MOQ, 원가, 마진, 리스크로 후보를 빠르게 선별</span>
+                </button>
+                <button class="menu-item" type="button" data-task="distribution">
+                  <span class="menu-number">04</span><b>타사 제품 유통 검토</b><span>협상 조건, 파일럿 GMV, 반품·클레임 통제 가능성 판단</span>
+                </button>
+                <button class="menu-item" type="button" data-task="recommendation">
+                  <span class="menu-number">05</span><b>고객 맞춤 제품 추천</b><span>구매 목적과 안전 조건에 맞는 실제 제품 후보와 링크 제안</span>
+                </button>
+                <button class="menu-item" type="button" data-task="evidence">
+                  <span class="menu-number">06</span><b>실제 제품 근거 검증</b><span>상품 페이지, 판매 링크, 가격, 확인일을 후보별로 점검</span>
+                </button>
+              </div>
+            </aside>
+          </div>
+
+          <div class="summary-strip" aria-label="운영 요약">
+            <div class="metric"><strong id="orderCount">0</strong><span>서버에 저장된 업무</span></div>
+            <div class="metric"><strong id="runCount">0</strong><span>서버에 보존된 조사</span></div>
+            <div class="metric"><strong id="reportCount">0</strong><span>열람 가능한 대표 보고서</span></div>
+            <div class="metric"><strong id="modeMetric">확인 중</strong><span>현재 조사 모드</span></div>
+          </div>
+        </section>
+
+        <section class="section" id="runs">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">조사 진행</p>
+              <h2>마케팅팀의 조사와 보고서 작성을 추적합니다</h2>
+              <p>시장·경쟁·VOC·상품·안전·전략·품질 검토의 현재 상태와 완료 보고서를 확인합니다.</p>
+            </div>
+          </div>
+          <div class="run-list" id="runList"><div class="empty-state">조사 실행 기록을 불러오고 있습니다.</div></div>
+        </section>
+
+        <section class="section" id="orders">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">지시 보관</p>
+              <h2>보관한 업무 지시를 관리합니다</h2>
+              <p>상태는 이 설치본의 서버에 보존됩니다. 같은 서비스 주소를 여는 브라우저에서 동일한 목록을 확인합니다.</p>
+            </div>
+            <div class="order-toolbar">
+              <button class="btn filter-btn active" type="button" data-filter="all">전체</button>
+              <button class="btn filter-btn" type="button" data-filter="지시">지시</button>
+              <button class="btn filter-btn" type="button" data-filter="조사">조사</button>
+              <button class="btn filter-btn" type="button" data-filter="검토">검토</button>
+              <button class="btn filter-btn" type="button" data-filter="보고">보고</button>
+              <button class="btn" type="button" id="exportOrders">내보내기</button>
+            </div>
+          </div>
+          <div class="order-list" id="orderList"></div>
+        </section>
+
+        <section class="section" id="team">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">담당 조직</p>
+              <h2>한 건의 보고서에 필요한 판단을 분리했습니다</h2>
+              <p>시장 신호, 고객 언어, 수익성, 안전, 제품 증거를 각 담당자가 맡고 전략팀과 티처팀이 결론과 재사용 품질을 함께 봅니다.</p>
+            </div>
+          </div>
+          <div class="team-grid">
+            <article class="team-card strategy">
+              <h3>전략팀</h3>
+              <p>대표가 내려야 할 결정을 먼저 정의하고, 우선순위와 포지셔닝을 책임집니다.</p>
+              <div class="role-list"><span>사업 판단과 선택지</span><span>진행·보류·중단 기준</span><span>대표 보고 첫 화면</span></div>
+            </article>
+            <article class="team-card">
+              <h3>고객·VOC 분석</h3>
+              <p>누가 왜 사는지, 만족과 불만이 무엇인지 반복 언어로 정리합니다.</p>
+              <div class="role-list"><span>연령·구매목적 페르소나</span><span>만족·불만 키워드</span><span>VOC를 제품 요구로 변환</span></div>
+            </article>
+            <article class="team-card">
+              <h3>시장·경쟁 분석</h3>
+              <p>실제 경쟁 제품과 가격, 리뷰, 채널 신호로 시장의 크기와 빈틈을 봅니다.</p>
+              <div class="role-list"><span>경쟁 제품 원장</span><span>가격·상품력 비교</span><span>성공 원인 분해</span></div>
+            </article>
+            <article class="team-card">
+              <h3>상품·수익성 분석</h3>
+              <p>제품 개발과 유통을 구분해 예상 매출, 비용, 마진, 파일럿 규모를 계산합니다.</p>
+              <div class="role-list"><span>산식과 가정 공개</span><span>낙관·기준·보수 범위</span><span>MOQ·AOV·GMV 검토</span></div>
+            </article>
+            <article class="team-card">
+              <h3>안전·실제품 검증</h3>
+              <p>유아용품의 연령 경계, 표현 위험, 실제 판매 제품과 출처를 확인합니다.</p>
+              <div class="role-list"><span>안전·표현 경계</span><span>실제 판매 제품 확인</span><span>상품 페이지와 확인일 점검</span></div>
+            </article>
+            <article class="team-card teacher">
+              <h3>티처팀</h3>
+              <p>좋았던 판단을 다음 업무에서도 재현할 수 있도록 순서, 기준, 설명을 개선합니다.</p>
+              <div class="role-list"><span>누락 방지와 품질 개선</span><span>회사 언어 정돈</span><span>반복 업무 표준화</span></div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="reports">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">대표 보고서 보관함</p>
+              <h2>완료된 판단 자료를 바로 엽니다</h2>
+              <p>이 설치본의 사용자 Codex가 완료한 보고서만 보관합니다. 보고서는 브라우저 인쇄 기능으로 PDF 저장할 수 있습니다.</p>
+            </div>
+          </div>
+          <div class="report-grid" id="reportArchive"><div class="empty-state">완료된 보고서가 아직 없습니다.</div></div>
+        </section>
+
+        <section class="section" id="charts">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">차트 설계실</p>
+              <h2>근거에 맞는 차트를 직접 선택합니다</h2>
+              <p>같은 숫자라도 질문에 따라 차트가 달라집니다. 먼저 근거를 선택하고, 추천 차트와 대안을 비교한 뒤 보고서에 사용할 방식을 저장하세요.</p>
+            </div>
+          </div>
+
+          <div class="chart-studio">
+            <div class="panel chart-controls">
+              <h3>어떤 근거를 보여줄까요?</h3>
+              <p>추천은 기본값입니다. 대표가 보고 싶은 관점에 맞춰 다른 차트로 바꿀 수 있습니다.</p>
+              <div class="field">
+                <label for="chartEvidence">근거 유형</label>
+                <select id="chartEvidence">
+                  <option value="voc">VOC 만족·불만</option>
+                  <option value="keywords">리뷰 반복 키워드</option>
+                  <option value="trend">시장 관심 추세</option>
+                  <option value="competitor">경쟁 제품 가격·리뷰</option>
+                  <option value="revenue">예상 매출 시나리오</option>
+                  <option value="persona">구매 페르소나 우선순위</option>
+                  <option value="spec">제품 스펙 비교</option>
+                  <option value="distribution">유통 후보 매력도</option>
+                  <option value="__custom__">직접 입력</option>
+                </select>
+                <div class="custom-entry" id="customChartEvidenceWrap" hidden>
+                  <label for="customChartEvidence">근거 유형 직접 입력</label>
+                  <input id="customChartEvidence" placeholder="예: 어린이집 교사 인터뷰 만족도">
+                  <span class="custom-hint">새로운 근거는 항목별 비교가 쉬운 가로 막대를 기본으로 추천합니다.</span>
+                </div>
+              </div>
+              <div class="chart-type-grid" id="chartTypeGrid" aria-label="차트 종류 선택">
+                <button class="chart-type-btn" type="button" data-chart="bar"><b>가로 막대</b><span>순위와 크기 비교</span></button>
+                <button class="chart-type-btn" type="button" data-chart="stacked"><b>누적 막대</b><span>만족·불만 구성비</span></button>
+                <button class="chart-type-btn" type="button" data-chart="line"><b>추세선</b><span>시간에 따른 변화</span></button>
+                <button class="chart-type-btn" type="button" data-chart="scatter"><b>포지셔닝 맵</b><span>두 변수와 후보 위치</span></button>
+                <button class="chart-type-btn" type="button" data-chart="range"><b>범위 차트</b><span>보수·기준·낙관 구간</span></button>
+                <button class="chart-type-btn" type="button" data-chart="heatmap"><b>평가 매트릭스</b><span>여러 기준을 한눈에 비교</span></button>
+              </div>
+              <div class="recommendation-box">
+                <b id="chartRecommendationTitle">추천: 누적 막대</b>
+                <p id="chartRecommendationReason">제품별 만족과 불만의 비중을 같은 길이에서 비교하기 좋습니다.</p>
+              </div>
+              <div class="actions">
+                <button class="btn primary" type="button" id="saveChartChoice">이 차트로 보고</button>
+              </div>
+            </div>
+
+            <div class="panel chart-preview-panel">
+              <div class="chart-preview-head">
+                <div><h3 id="chartPreviewTitle">토들러 베개 VOC 구성</h3><p id="chartPreviewSub">샘플 데이터 · 실제 보고서에서는 출처와 확인일을 함께 표기</p></div>
+                <span class="chart-badge" id="chartPreviewBadge">누적 막대</span>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas class="chart-canvas" id="chartPreview" role="img" aria-label="선택한 근거와 차트 방식의 샘플 미리보기"></canvas>
+              </div>
+              <div class="chart-caption">
+                <p id="chartInsight">포몽드는 세탁·냉감 만족 비중이 높고, 엘라바는 높이와 적응 관련 불만 비중을 함께 확인해야 합니다.</p>
+                <small>표기 예시: 리뷰 표본 n=240 · 2026.07.11 확인</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="saved-chart-plan">
+            <h3>이번 보고서 차트 구성</h3>
+            <div id="chartPlanList"></div>
+          </div>
+
+          <div class="chart-gallery" aria-label="차트 샘플 모음">
+            <article class="chart-sample"><div class="chart-sample-head"><b>가로 막대</b><span>키워드 빈도·제품 순위</span></div><canvas data-sample-chart="bar" role="img" aria-label="가로 막대 차트 샘플"></canvas></article>
+            <article class="chart-sample"><div class="chart-sample-head"><b>누적 막대</b><span>만족·불만 구성비</span></div><canvas data-sample-chart="stacked" role="img" aria-label="누적 막대 차트 샘플"></canvas></article>
+            <article class="chart-sample"><div class="chart-sample-head"><b>추세선</b><span>검색·판매 관심 변화</span></div><canvas data-sample-chart="line" role="img" aria-label="추세선 차트 샘플"></canvas></article>
+            <article class="chart-sample"><div class="chart-sample-head"><b>포지셔닝 맵</b><span>가격×리뷰·수요×마진</span></div><canvas data-sample-chart="scatter" role="img" aria-label="포지셔닝 맵 샘플"></canvas></article>
+            <article class="chart-sample"><div class="chart-sample-head"><b>범위 차트</b><span>예상 매출 시나리오</span></div><canvas data-sample-chart="range" role="img" aria-label="범위 차트 샘플"></canvas></article>
+            <article class="chart-sample"><div class="chart-sample-head"><b>평가 매트릭스</b><span>스펙·페르소나 다기준 비교</span></div><canvas data-sample-chart="heatmap" role="img" aria-label="평가 매트릭스 샘플"></canvas></article>
+          </div>
+        </section>
+
+        <section class="section" id="quality">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">제출 기준</p>
+              <h2>대표 보고 전에 반드시 닫아야 할 항목</h2>
+              <p>보기 좋은 문서보다 실제 제품과 계산 근거, 고객 언어가 먼저입니다. 빠진 항목은 가능한 자료 회수 경로를 끝까지 확인합니다.</p>
+            </div>
+          </div>
+          <div class="quality-layout">
+            <table class="quality-table">
+              <thead><tr><th>검토 항목</th><th>필수 내용</th><th>완료 기준</th></tr></thead>
+              <tbody>
+                <tr><td>고객 VOC</td><td>만족, 불만, 반복 키워드와 대표 리뷰 근거</td><td class="quality-state">제품 요구로 연결</td></tr>
+                <tr><td>성공 원인</td><td>제품력, 가격, 채널, 마케팅, 리뷰 축적 효과를 분리</td><td class="quality-state">하나의 원인으로 단정하지 않음</td></tr>
+                <tr><td>구매 페르소나</td><td>연령, 구매자, 구매 목적, 사용 장면, 불안, 증거 요구</td><td class="quality-state">신생아·토들러 구분</td></tr>
+                <tr><td>경쟁 제품</td><td>실제 제품명, 판매 링크, 가격, 확인일, 출처 유형</td><td class="quality-state">후보별 식별 가능</td></tr>
+                <tr><td>예상 매출</td><td>입력값 출처, 산식, 리뷰 전환 가정, 기간, 범위, 한계</td><td class="quality-state">재계산 가능</td></tr>
+                <tr><td>상품 개발안</td><td>제품 스펙, 가격 포지션, 차별점, 안전 문구, 런칭 테스트</td><td class="quality-state">대표의 결정 항목 명확</td></tr>
+                <tr><td>제품 근거</td><td>판매 페이지와 제품명, 가격, 확인일의 상호 일치</td><td class="quality-state">원문에서 재확인 가능</td></tr>
+                <tr><td>최종 보고</td><td>결론, 근거, 숫자, 리스크, 다음 행동을 회사 언어로 작성</td><td class="quality-state">첫 화면에서 판단 가능</td></tr>
+              </tbody>
+            </table>
+            <aside class="quality-note">
+              <h3>완료 선언 원칙</h3>
+              <p>필수 자료가 없으면 먼저 다른 회수 경로를 사용합니다. 단순히 수집 실패라고 적고 끝내지 않습니다.</p>
+              <ul>
+                <li>공식몰 → 브랜드 판매처 → 주요 리테일 → 검색 결과 → 기존 검증 자산 순으로 회수</li>
+                <li>실제품 보고서는 판매 링크와 확인일이 없으면 최종본으로 부르지 않음</li>
+                <li>수치가 추정이면 실제 매출과 구분하고 가정의 영향을 밝힘</li>
+                <li>전략팀은 결론을, 티처팀은 재현성과 설명 품질을 최종 점검</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="briefDialog" aria-labelledby="briefTitle">
+    <div class="modal-head">
+      <div><h2 id="briefTitle">마케팅팀 업무 지시서</h2><p>대표 지시를 팀이 바로 실행할 수 있는 형태로 정리했습니다.</p></div>
+      <button class="close-btn" type="button" id="closeBrief" aria-label="닫기">×</button>
+    </div>
+    <div class="brief" id="briefContent"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" id="copyBrief">지시서 복사</button>
+      <button class="btn primary" type="button" id="confirmBrief">확인</button>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "marketing-team-orders-v1";
+      const CHART_STORAGE_KEY = "marketing-chart-preferences-v1";
+      const CUSTOM_OPTION = "__custom__";
+      const form = document.getElementById("workForm");
+      const orderList = document.getElementById("orderList");
+      const orderCount = document.getElementById("orderCount");
+      const runList = document.getElementById("runList");
+      const runCount = document.getElementById("runCount");
+      const reportCount = document.getElementById("reportCount");
+      const reportArchive = document.getElementById("reportArchive");
+      const runResearchButton = document.getElementById("runResearch");
+      const connectChatGptButton = document.getElementById("connectChatGpt");
+      const disconnectChatGptButton = document.getElementById("disconnectChatGpt");
+      const dialog = document.getElementById("briefDialog");
+      const briefContent = document.getElementById("briefContent");
+      const toast = document.getElementById("toast");
+      let activeFilter = "all";
+      let activeBrief = "";
+      let selectedChartType = "stacked";
+      let runtimeConfig = null;
+      let researchJobs = [];
+      let researchPollTimer = null;
+
+      const chartTypes = {
+        bar: {label: "가로 막대", use: "순위와 크기 차이를 정확하게 비교"},
+        stacked: {label: "누적 막대", use: "만족·불만이나 구성비를 같은 기준으로 비교"},
+        line: {label: "추세선", use: "시간에 따른 증가·감소와 변곡점을 확인"},
+        scatter: {label: "포지셔닝 맵", use: "두 변수 사이에서 후보의 상대 위치를 비교"},
+        range: {label: "범위 차트", use: "불확실한 추정치를 보수·기준·낙관 구간으로 표현"},
+        heatmap: {label: "평가 매트릭스", use: "여러 제품과 평가 기준을 동시에 비교"}
+      };
+
+      const chartEvidenceMap = {
+        voc: {label: "VOC 만족·불만", recommended: "stacked", title: "토들러 베개 VOC 구성", reason: "제품별 만족과 불만의 비중을 같은 길이에서 비교하기 좋습니다.", insight: "포몽드는 세탁·냉감 만족 비중이 높고, 엘라바는 높이와 적응 관련 불만 비중을 함께 확인해야 합니다."},
+        keywords: {label: "리뷰 반복 키워드", recommended: "bar", title: "리뷰 반복 키워드 빈도", reason: "단어별 언급량과 우선순위를 가장 오해 없이 보여줍니다.", insight: "세탁 편의와 통기성은 반복 만족 언어이며, 높이와 냄새는 우선 개선해야 할 불만 언어입니다."},
+        trend: {label: "시장 관심 추세", recommended: "line", title: "유아·토들러 베개 관심 추세", reason: "계절성과 캠페인 전후 변화를 시간 순서로 읽을 수 있습니다.", insight: "여름 냉감 수요와 어린이집 준비 시기에 관심이 높아지는지 확인해 런칭 시점을 정합니다."},
+        competitor: {label: "경쟁 제품 가격·리뷰", recommended: "scatter", title: "경쟁 제품 가격×리뷰 포지셔닝", reason: "가격과 시장 반응을 동시에 놓아 과밀·공백 구간을 찾기 좋습니다.", insight: "중가 구간에서 리뷰 신호가 강한 제품과 프리미엄 가격 대비 증거가 약한 제품을 구분합니다."},
+        revenue: {label: "예상 매출 시나리오", recommended: "range", title: "경쟁 제품 월매출 추정 범위", reason: "추정값을 단일 숫자로 오인하지 않도록 가정 범위를 그대로 보여줍니다.", insight: "후보별 보수·기준·낙관 범위가 겹치는지 보고, 실제 판매자 데이터가 필요한 우선순위를 정합니다."},
+        persona: {label: "구매 페르소나 우선순위", recommended: "heatmap", title: "페르소나별 구매 기준", reason: "페르소나와 구매 기준을 동시에 비교해 타깃별 차이를 드러냅니다.", insight: "어린이집 낮잠 준비 고객은 세탁과 휴대성을, 수면 전환 고객은 높이와 적응성을 더 중요하게 봅니다."},
+        spec: {label: "제품 스펙 비교", recommended: "heatmap", title: "경쟁 제품 스펙 비교", reason: "제품 수와 비교 기준이 많을 때 강점·빈칸을 빠르게 찾을 수 있습니다.", insight: "세탁, 통기, 높이, 휴대성, 안전 문구에서 경쟁 제품이 충족하지 못한 조합을 찾습니다."},
+        distribution: {label: "유통 후보 매력도", recommended: "scatter", title: "유통 후보 수요×통제 가능성", reason: "수요와 협상·클레임 통제 가능성을 함께 놓아 우선 협상 후보를 고릅니다.", insight: "수요가 가장 큰 제품보다 우리 채널에서 조건과 위험을 통제할 수 있는 후보를 먼저 봅니다."}
+      };
+
+      const evidenceToChart = {
+        "고객 VOC": "voc",
+        "경쟁 제품": "competitor",
+        "예상 매출 산식": "revenue",
+        "실제 제품 판매 근거": "spec",
+        "연령·안전 경계": "persona",
+        "자사 상품 제안": "spec"
+      };
+
+      const taskMap = {
+        voc: {
+          label: "VOC 기반 상품 개발",
+          lead: "상품개발 책임자",
+          support: "고객·VOC 분석, 시장·경쟁 분석, 수익성 분석, 안전 검토, 전략팀, 티처팀",
+          output: "VOC 요약 → 성공 원인 → 구매 페르소나 → 자사 스펙 → 가격 포지션 → 런칭 테스트 → 대표 보고",
+          evidence: ["고객 VOC", "경쟁 제품", "예상 매출 산식", "연령·안전 경계", "자사 상품 제안"]
+        },
+        market: {
+          label: "시장·경쟁 제품 분석",
+          lead: "시장·경쟁 분석 책임자",
+          support: "고객 분석, 수익성 분석, 상품개발, 전략팀, 티처팀",
+          output: "시장 신호 → 경쟁 제품 원장 → 가격·상품력 비교 → 성공 원인 → 예상 매출 범위 → 진입 기회",
+          evidence: ["경쟁 제품", "예상 매출 산식", "실제 제품 판매 근거", "연령·안전 경계"]
+        },
+        md: {
+          label: "MD 소싱 1차 검토",
+          lead: "MD·소싱 책임자",
+          support: "시장·경쟁 분석, 수익성 분석, 안전 검토, 전략팀",
+          output: "후보별 PASS·HOLD·FAIL → 수요 → 원가·MOQ → 예상 마진 → 리스크 → 다음 견적·샘플 행동",
+          evidence: ["경쟁 제품", "예상 매출 산식", "실제 제품 판매 근거", "연령·안전 경계"]
+        },
+        distribution: {
+          label: "타사 제품 유통 검토",
+          lead: "유통·소싱 책임자",
+          support: "수익성 분석, 시장·경쟁 분석, 안전 검토, 전략팀, 티처팀",
+          output: "유통 후보 순위 → 협상 조건 → 90일 GMV·마진 시나리오 → 클레임 통제 → 중단 조건 → 대표 보고",
+          evidence: ["고객 VOC", "경쟁 제품", "예상 매출 산식", "실제 제품 판매 근거", "연령·안전 경계"]
+        },
+        recommendation: {
+          label: "고객 맞춤 제품 추천",
+          lead: "고객 인사이트 책임자",
+          support: "제품 분석, 안전 검토, 시장 조사, 전략팀",
+          output: "구매 목적 → 금지·필수 조건 → 실제 후보 4~5개 → 비교 기준 → 구매 링크 → 추천 한계",
+          evidence: ["고객 VOC", "경쟁 제품", "실제 제품 판매 근거", "연령·안전 경계"]
+        },
+        evidence: {
+          label: "실제 제품 근거 검증",
+          lead: "실제품 검증 책임자",
+          support: "제품 분석, 안전 검토, 시장 조사, 티처팀",
+          output: "제품별 판매 페이지·제품명·가격·확인일 → 근거 일치 점검 → 불일치 기록 → 최종 보고 반영",
+          evidence: ["경쟁 제품", "실제 제품 판매 근거", "연령·안전 경계"]
+        }
+      };
+
+      function syncCustomField(selectId, wrapId, inputId) {
+        const select = document.getElementById(selectId);
+        const wrap = document.getElementById(wrapId);
+        const input = document.getElementById(inputId);
+        const isCustom = select.value === CUSTOM_OPTION;
+        wrap.hidden = !isCustom;
+        input.required = isCustom;
+        if (!isCustom) input.value = "";
+        return isCustom;
+      }
+
+      function resolvedSelectValue(selectId, inputId) {
+        const select = document.getElementById(selectId);
+        return select.value === CUSTOM_OPTION ? document.getElementById(inputId).value.trim() : select.value;
+      }
+
+      function taskForData(data) {
+        if (data.taskId !== CUSTOM_OPTION) return taskMap[data.taskId] || null;
+        if (!data.taskLabel) return null;
+        return {
+          label: data.taskLabel,
+          lead: "마케팅 전략 책임자",
+          support: "고객·시장·수익성·안전 담당, 전략팀, 티처팀",
+          output: "대표 질문 정의 → 필요한 근거 확정 → 조사·분석 → 선택지와 리스크 정리 → 대표 보고",
+          evidence: data.evidence || []
+        };
+      }
+
+      function currentChartEvidenceId() {
+        const select = document.getElementById("chartEvidence");
+        if (select.value !== CUSTOM_OPTION) return select.value;
+        return "custom:" + encodeURIComponent(document.getElementById("customChartEvidence").value.trim());
+      }
+
+      function evidenceForId(evidenceId) {
+        if (evidenceId.startsWith("custom:")) {
+          const label = decodeURIComponent(evidenceId.slice(7)) || "사용자 지정 근거";
+          return {
+            label,
+            recommended: "bar",
+            title: label + " 비교",
+            reason: "새로운 근거는 먼저 항목별 크기와 순위를 비교하는 가로 막대로 시작하는 것이 적합합니다.",
+            insight: "실제 보고서에서는 이 근거가 어떤 사업 판단을 바꾸는지 한 문장으로 설명합니다."
+          };
+        }
+        return chartEvidenceMap[evidenceId] || null;
+      }
+
+      function loadOrders() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+        catch (_) { return []; }
+      }
+
+      function saveOrders(orders) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+          scheduleUiStateSync();
+          return true;
+        } catch (_) {
+          showToast("이 브라우저에서는 업무 저장이 제한됩니다. 지시서 복사를 이용해 주세요.");
+          return false;
+        }
+      }
+
+      function loadChartPreferences() {
+        try { return JSON.parse(localStorage.getItem(CHART_STORAGE_KEY) || "{}"); }
+        catch (_) { return {}; }
+      }
+
+      function saveChartPreferences(preferences) {
+        try { localStorage.setItem(CHART_STORAGE_KEY, JSON.stringify(preferences)); scheduleUiStateSync(); return true; }
+        catch (_) { showToast("이 브라우저에서는 차트 선택 저장이 제한됩니다."); return false; }
+      }
+
+      function scheduleUiStateSync() {
+        window.clearTimeout(scheduleUiStateSync.timer);
+        scheduleUiStateSync.timer = window.setTimeout(async () => {
+          try {
+            await fetchJson("/api/ui-state", {method: "PUT", body: JSON.stringify({orders: loadOrders(), chartPreferences: loadChartPreferences()})});
+          } catch (_) { showToast("서버 저장이 지연되고 있습니다. 브라우저에 임시 보관했습니다."); }
+        }, 180);
+      }
+
+      async function loadUiState() {
+        try {
+          const state = await fetchJson("/api/ui-state?ts=" + Date.now(), {cache: "no-store"});
+          const localOrders = loadOrders();
+          const localCharts = loadChartPreferences();
+          const orders = (state.orders || []).length ? state.orders : localOrders;
+          const chartPreferences = Object.keys(state.chartPreferences || {}).length ? state.chartPreferences : localCharts;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+          localStorage.setItem(CHART_STORAGE_KEY, JSON.stringify(chartPreferences));
+          if (!(state.orders || []).length && localOrders.length || !Object.keys(state.chartPreferences || {}).length && Object.keys(localCharts).length) {
+            await fetchJson("/api/ui-state", {method: "PUT", body: JSON.stringify({orders, chartPreferences})});
+          }
+        } catch (_) { /* Keep the browser cache available while the local server recovers. */ }
+      }
+
+      function chartPlanForEvidence(evidenceList) {
+        const preferences = loadChartPreferences();
+        const seen = new Set();
+        return evidenceList.map((label) => evidenceToChart[label]).filter(Boolean).filter((id) => {
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        }).map((id) => {
+          const evidence = chartEvidenceMap[id];
+          const type = preferences[id] || evidence.recommended;
+          return evidence.label + ": " + chartTypes[type].label;
+        });
+      }
+
+      function fitCanvas(canvas) {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(canvas.clientWidth, 240);
+        const height = Math.max(canvas.clientHeight, 140);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        return {ctx, width, height};
+      }
+
+      function chartBase(canvas) {
+        const {ctx, width, height} = fitCanvas(canvas);
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "#fbfcfb";
+        ctx.fillRect(0, 0, width, height);
+        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+        ctx.textBaseline = "middle";
+        return {ctx, width, height, left: 64, right: 22, top: 24, bottom: 34};
+      }
+
+      function drawGrid(ctx, left, top, width, height, steps = 4) {
+        ctx.strokeStyle = "#e1e7e3";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= steps; i += 1) {
+          const x = left + width * i / steps;
+          ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, top + height); ctx.stroke();
+        }
+      }
+
+      function renderCanvas(canvas, type) {
+        const {ctx, width, height, left, right, top, bottom} = chartBase(canvas);
+        const plotW = width - left - right;
+        const plotH = height - top - bottom;
+        const green = "#1f6d5c", coral = "#c9533c", blue = "#315f87", amber = "#d7a03d", muted = "#65716a";
+        ctx.fillStyle = muted;
+
+        if (type === "bar") {
+          const labels = ["세탁 편의", "통기성", "낮은 높이", "휴대성", "냄새"];
+          const values = [86, 74, 61, 46, 31];
+          drawGrid(ctx, left, top, plotW, plotH);
+          const rowH = plotH / labels.length;
+          labels.forEach((label, i) => {
+            const y = top + rowH * i + rowH * .5;
+            ctx.textAlign = "right"; ctx.fillStyle = muted; ctx.fillText(label, left - 8, y);
+            ctx.fillStyle = i === 0 ? coral : green; ctx.fillRect(left, y - 8, plotW * values[i] / 100, 16);
+            ctx.textAlign = "left"; ctx.fillStyle = "#354139"; ctx.fillText(values[i], left + plotW * values[i] / 100 + 6, y);
+          });
+        } else if (type === "stacked") {
+          const labels = ["포몽드", "엘라바", "니노", "라라스"];
+          const positive = [72, 58, 66, 61];
+          const rowH = plotH / labels.length;
+          labels.forEach((label, i) => {
+            const y = top + rowH * i + rowH * .5;
+            ctx.textAlign = "right"; ctx.fillStyle = muted; ctx.fillText(label, left - 8, y);
+            ctx.fillStyle = green; ctx.fillRect(left, y - 10, plotW * positive[i] / 100, 20);
+            ctx.fillStyle = coral; ctx.fillRect(left + plotW * positive[i] / 100, y - 10, plotW * (100 - positive[i]) / 100, 20);
+            ctx.textAlign = "center"; ctx.fillStyle = "#fff"; ctx.fillText(positive[i] + "%", left + plotW * positive[i] / 200, y);
+          });
+          ctx.textAlign = "left"; ctx.fillStyle = green; ctx.fillText("만족", left, height - 15); ctx.fillStyle = coral; ctx.fillText("불만", left + 50, height - 15);
+        } else if (type === "line") {
+          const labels = ["1월", "3월", "5월", "7월", "9월", "11월"];
+          const values = [38, 42, 51, 78, 69, 47];
+          drawGrid(ctx, left, top, plotW, plotH);
+          ctx.strokeStyle = green; ctx.lineWidth = 3; ctx.beginPath();
+          values.forEach((value, i) => {
+            const x = left + plotW * i / (values.length - 1), y = top + plotH * (1 - value / 100);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          }); ctx.stroke();
+          values.forEach((value, i) => {
+            const x = left + plotW * i / (values.length - 1), y = top + plotH * (1 - value / 100);
+            ctx.fillStyle = i === 3 ? coral : green; ctx.beginPath(); ctx.arc(x, y, i === 3 ? 6 : 4, 0, Math.PI * 2); ctx.fill();
+            ctx.textAlign = "center"; ctx.fillStyle = muted; ctx.fillText(labels[i], x, height - 16);
+          });
+        } else if (type === "scatter") {
+          drawGrid(ctx, left, top, plotW, plotH);
+          const points = [{n:"포몽드",x:.42,y:.72,c:green},{n:"엘라바",x:.58,y:.62,c:blue},{n:"니노",x:.66,y:.46,c:amber},{n:"라라스",x:.82,y:.81,c:coral},{n:"이몽",x:.72,y:.34,c:blue}];
+          points.forEach((p) => {
+            const x = left + plotW * p.x, y = top + plotH * (1 - p.y);
+            ctx.fillStyle = p.c; ctx.globalAlpha = .88; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+            ctx.textAlign = "center"; ctx.fillStyle = "#354139"; ctx.fillText(p.n, x, y - 15);
+          });
+          ctx.textAlign = "center"; ctx.fillStyle = muted; ctx.fillText("가격 또는 통제 난이도 →", left + plotW / 2, height - 15);
+          ctx.save(); ctx.translate(14, top + plotH / 2); ctx.rotate(-Math.PI / 2); ctx.fillText("리뷰·수요 신호 →", 0, 0); ctx.restore();
+        } else if (type === "range") {
+          const labels = ["포몽드", "엘라바", "니노", "라라스"];
+          const ranges = [[22,38,56],[18,31,48],[14,27,43],[31,52,79]];
+          drawGrid(ctx, left, top, plotW, plotH);
+          const rowH = plotH / labels.length;
+          labels.forEach((label, i) => {
+            const y = top + rowH * i + rowH * .5;
+            ctx.textAlign = "right"; ctx.fillStyle = muted; ctx.fillText(label, left - 8, y);
+            const [low, mid, high] = ranges[i];
+            const x1 = left + plotW * low / 80, xm = left + plotW * mid / 80, x2 = left + plotW * high / 80;
+            ctx.strokeStyle = blue; ctx.lineWidth = 8; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y); ctx.stroke();
+            ctx.fillStyle = coral; ctx.beginPath(); ctx.arc(xm, y, 6, 0, Math.PI * 2); ctx.fill();
+          });
+          ctx.textAlign = "center"; ctx.fillStyle = muted; ctx.fillText("월매출 추정 범위 (백만원)", left + plotW / 2, height - 15);
+        } else if (type === "heatmap") {
+          const rows = ["포몽드", "엘라바", "니노", "자사안"];
+          const cols = ["세탁", "통기", "높이", "휴대", "표현"];
+          const values = [[5,5,3,4,4],[4,4,4,3,3],[4,3,5,3,4],[5,5,5,5,5]];
+          const cellW = plotW / cols.length, cellH = plotH / rows.length;
+          cols.forEach((col, i) => { ctx.textAlign = "center"; ctx.fillStyle = muted; ctx.fillText(col, left + cellW * (i + .5), 13); });
+          rows.forEach((row, r) => {
+            ctx.textAlign = "right"; ctx.fillStyle = muted; ctx.fillText(row, left - 8, top + cellH * (r + .5));
+            values[r].forEach((value, c) => {
+              const alpha = .16 + value * .14;
+              ctx.fillStyle = `rgba(31,109,92,${alpha})`; ctx.fillRect(left + cellW * c + 2, top + cellH * r + 2, cellW - 4, cellH - 4);
+              ctx.textAlign = "center"; ctx.fillStyle = value >= 4 ? "#fff" : "#294038"; ctx.fillText(value, left + cellW * (c + .5), top + cellH * (r + .5));
+            });
+          });
+        }
+      }
+
+      function updateChartStudio() {
+        const evidenceId = currentChartEvidenceId();
+        const evidence = evidenceForId(evidenceId);
+        if (!evidence || !chartTypes[selectedChartType]) return;
+        document.querySelectorAll(".chart-type-btn").forEach((button) => button.classList.toggle("active", button.dataset.chart === selectedChartType));
+        document.getElementById("chartRecommendationTitle").textContent = "추천: " + chartTypes[evidence.recommended].label;
+        document.getElementById("chartRecommendationReason").textContent = evidence.reason;
+        document.getElementById("chartPreviewTitle").textContent = evidence.title;
+        document.getElementById("chartPreviewBadge").textContent = chartTypes[selectedChartType].label;
+        document.getElementById("chartInsight").textContent = evidence.insight;
+        const canvas = document.getElementById("chartPreview");
+        canvas.setAttribute("aria-label", evidence.label + " 근거를 " + chartTypes[selectedChartType].label + "로 표현한 샘플");
+        renderCanvas(canvas, selectedChartType);
+      }
+
+      function renderChartPlan() {
+        const preferences = loadChartPreferences();
+        const rows = Object.entries(preferences).filter(([evidenceId, type]) => evidenceForId(evidenceId) && chartTypes[type]);
+        const target = document.getElementById("chartPlanList");
+        if (!rows.length) {
+          target.innerHTML = '<div class="empty-state">아직 저장한 차트가 없습니다. 위에서 근거와 차트를 선택해 주세요.</div>';
+          return;
+        }
+        target.innerHTML = '<table class="chart-plan-table"><thead><tr><th>근거</th><th>선택 차트</th><th>이 차트로 볼 내용</th><th></th></tr></thead><tbody>' + rows.map(([evidenceId, type]) => {
+          const evidence = evidenceForId(evidenceId);
+          return '<tr><td>' + escapeHtml(evidence.label) + '</td><td>' + escapeHtml(chartTypes[type].label) + '</td><td>' + escapeHtml(chartTypes[type].use) + '</td><td><button type="button" data-remove-chart="' + escapeHtml(evidenceId) + '">삭제</button></td></tr>';
+        }).join("") + '</tbody></table>';
+      }
+
+      function renderChartGallery() {
+        document.querySelectorAll("[data-sample-chart]").forEach((canvas) => renderCanvas(canvas, canvas.dataset.sampleChart));
+      }
+
+      function escapeHtml(value) {
+        return String(value || "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+      }
+
+      async function fetchJson(url, options = {}) {
+        const response = await fetch(url, {
+          ...options,
+          headers: {"content-type": "application/json", ...(options.headers || {})}
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || "서버 요청을 처리하지 못했습니다.");
+        return payload;
+      }
+
+      function runStatusLabel(status) {
+        return ({
+          queued: "대기",
+          running: "조사 중",
+          completed: "완료",
+          completed_with_warnings: "확인 후 제출",
+          failed: "실패",
+          interrupted: "중단됨",
+          cancelled: "취소됨"
+        })[status] || status;
+      }
+
+      function agentStatusLabel(status) {
+        return ({waiting: "대기", running: "진행", completed: "완료", warning: "확인", failed: "실패", interrupted: "중단", cancelled: "취소"})[status] || status;
+      }
+
+      function renderResearchRuns() {
+        runCount.textContent = researchJobs.length;
+        renderReportArchive();
+        if (!researchJobs.length) {
+          runList.innerHTML = '<div class="empty-state">아직 실행한 조사가 없습니다. 업무 지시에서 첫 조사를 시작해 주세요.</div>';
+          return;
+        }
+        runList.innerHTML = researchJobs.map((job) => {
+          const agents = (job.agents || []).map((agent) => '<div class="agent-step ' + escapeHtml(agent.status) + '" title="' + escapeHtml(agent.owner + (agent.note ? " · " + agent.note : "")) + '"><b>' + escapeHtml(agent.label) + '</b><span>' + escapeHtml(agentStatusLabel(agent.status)) + '</span></div>').join("");
+          const running = job.status === "running" || job.status === "queued";
+          const retryable = ["failed", "interrupted", "cancelled"].includes(job.status);
+          const actions = [
+            job.reportUrl ? '<a href="' + escapeHtml(job.reportUrl) + '" target="_blank" rel="noreferrer">보고서 열기</a>' : "",
+            running ? '<button type="button" data-run-action="cancel" data-run-id="' + escapeHtml(job.id) + '">조사 중단</button>' : "",
+            retryable ? '<button type="button" data-run-action="retry" data-run-id="' + escapeHtml(job.id) + '">다시 실행</button>' : "",
+            !running ? '<button type="button" data-run-action="delete" data-run-id="' + escapeHtml(job.id) + '">삭제</button>' : ""
+          ].join("");
+          const note = job.error || (job.quality?.warnings?.length ? job.quality.warnings[0] : ((job.agents || []).find((agent) => agent.status === "running")?.note || "조사 상태가 서버에 보존됩니다."));
+          return '<article class="run-row" data-job-id="' + escapeHtml(job.id) + '">' +
+            '<div class="run-head"><span class="run-code">' + escapeHtml(job.code) + '</span><div class="run-title"><strong>' + escapeHtml(job.request.product) + '</strong><span>' + escapeHtml(job.request.stage + " · " + job.request.decision) + '</span></div><span class="run-state ' + escapeHtml(job.status) + '">' + escapeHtml(runStatusLabel(job.status)) + '</span></div>' +
+            '<div class="agent-progress" aria-label="담당별 조사 진행 상태">' + agents + '</div>' +
+            '<div class="run-foot"><span class="run-note">' + escapeHtml(note) + '</span><div class="run-actions">' + actions + '</div></div>' +
+          '</article>';
+        }).join("");
+      }
+
+      function renderReportArchive() {
+        const reports = researchJobs.filter((job) => job.reportUrl);
+        reportCount.textContent = reports.length;
+        if (!reports.length) {
+          reportArchive.innerHTML = '<div class="empty-state">완료된 보고서가 아직 없습니다. 첫 조사를 실행하면 이곳에 보관됩니다.</div>';
+          return;
+        }
+        reportArchive.innerHTML = reports.map((job) => {
+          const task = taskMap[job.request.taskId];
+          const label = task?.label || job.request.taskLabel || "마케팅 조사";
+          const completed = job.completedAt ? new Intl.DateTimeFormat("ko-KR", {year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date(job.completedAt)) : "완료";
+          return '<article class="report-card">' +
+            '<div class="report-mark" aria-hidden="true">' + escapeHtml(job.code) + '</div>' +
+            '<div class="report-copy"><span class="report-type">' + escapeHtml(label) + '</span>' +
+            '<h3>' + escapeHtml(job.request.product) + '</h3>' +
+            '<p>' + escapeHtml(job.request.stage + " · " + job.request.decision) + '</p>' +
+            '<div class="report-meta"><span class="tag">근거 ' + escapeHtml((job.sources || []).length) + '개</span><span class="tag">' + escapeHtml(completed) + '</span><span class="tag">' + escapeHtml(job.mode === "codex" ? "사용자 Codex" : "데모") + '</span></div>' +
+            '<div class="report-links"><a class="btn primary" href="' + escapeHtml(job.reportUrl) + '" target="_blank" rel="noreferrer">보고서 열기</a></div></div>' +
+          '</article>';
+        }).join("");
+      }
+
+      function scheduleResearchPoll() {
+        window.clearTimeout(researchPollTimer);
+        if (researchJobs.some((job) => ["queued", "running"].includes(job.status))) {
+          researchPollTimer = window.setTimeout(() => loadResearchRuns(true), 1300);
+        }
+      }
+
+      async function loadResearchRuns(silent = false) {
+        try {
+          const payload = await fetchJson("/api/jobs");
+          researchJobs = payload.jobs || [];
+          renderResearchRuns();
+          scheduleResearchPoll();
+        } catch (error) {
+          if (!silent) runList.innerHTML = '<div class="empty-state">조사 실행 서버에 연결할 수 없습니다.</div>';
+        }
+      }
+
+      async function loadRuntimeConfig() {
+        const title = document.getElementById("runtimePanelTitle");
+        const copy = document.getElementById("runtimePanelCopy");
+        const mode = document.getElementById("runtimeMode");
+        const top = document.getElementById("runtimeStatus");
+        const metric = document.getElementById("modeMetric");
+        const panel = document.getElementById("runtimePanel");
+        try {
+          runtimeConfig = await fetchJson("/api/config?ts=" + Date.now(), {cache: "no-store"});
+          const codex = runtimeConfig.mode === "codex";
+          const connected = Boolean(runtimeConfig.ready);
+          const account = runtimeConfig.runtime || {};
+          const accountLabel = [account.email, account.planType].filter(Boolean).join(" · ");
+          title.textContent = codex ? (connected ? "내 ChatGPT 계정으로 조사할 수 있습니다" : "ChatGPT 계정을 연결해 주세요") : "데모 분석 실행 가능";
+          copy.textContent = codex ? (connected ? ((accountLabel ? accountLabel + " · " : "") + "사용량과 권한은 연결된 계정에 적용됩니다.") : (account.reason || "브라우저 로그인 후 사용자의 Codex가 조사를 실행합니다.")) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
+          mode.textContent = codex ? (connected ? "CODEX" : "연결 필요") : "DEMO";
+          mode.classList.toggle("live", connected);
+          panel.classList.toggle("connected", connected);
+          metric.textContent = codex ? (connected ? "CODEX" : "연결 필요") : "DEMO";
+          top.innerHTML = '<span class="dot"></span>' + (connected ? "사용자 Codex 준비" : "ChatGPT 연결 필요");
+          connectChatGptButton.hidden = !codex || connected;
+          disconnectChatGptButton.hidden = !codex || !connected;
+          runResearchButton.disabled = !runtimeConfig.ready;
+        } catch (_) {
+          runtimeConfig = null;
+          title.textContent = "실행 엔진 연결 필요";
+          copy.textContent = "정적 보고서는 열 수 있지만 새로운 조사는 현재 실행할 수 없습니다.";
+          mode.textContent = "OFFLINE";
+          metric.textContent = "연결 필요";
+          top.textContent = "실행 엔진 연결 필요";
+          connectChatGptButton.hidden = false;
+          disconnectChatGptButton.hidden = true;
+          runResearchButton.disabled = true;
+        }
+      }
+
+      connectChatGptButton.addEventListener("click", async () => {
+        connectChatGptButton.disabled = true;
+        connectChatGptButton.textContent = "로그인 여는 중";
+        try {
+          const login = await fetchJson("/api/auth/chatgpt", {method: "POST"});
+          const popup = window.open(login.authUrl, "_blank", "noopener,noreferrer");
+          if (!popup) window.location.href = login.authUrl;
+          showToast("브라우저에서 ChatGPT 로그인을 완료해 주세요.");
+          for (let attempt = 0; attempt < 90; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await loadRuntimeConfig();
+            if (runtimeConfig?.ready) {
+              showToast("사용자 Codex가 연결됐습니다.");
+              break;
+            }
+          }
+        } catch (error) {
+          showToast(error.message);
+        } finally {
+          connectChatGptButton.disabled = false;
+          connectChatGptButton.textContent = "ChatGPT로 연결";
+        }
+      });
+
+      disconnectChatGptButton.addEventListener("click", async () => {
+        if (!window.confirm("이 기기의 Codex에서 ChatGPT 계정 연결을 해제할까요?")) return;
+        try {
+          await fetchJson("/api/auth/logout", {method: "POST"});
+          await loadRuntimeConfig();
+          showToast("ChatGPT 연결을 해제했습니다.");
+        } catch (error) { showToast(error.message); }
+      });
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2400);
+      }
+
+      function checkedEvidence() {
+        return [...form.querySelectorAll('input[name="evidence"]:checked')].map((item) => item.value);
+      }
+
+      function applyTask(taskId) {
+        const task = taskMap[taskId];
+        if (!task) return;
+        form.taskType.value = taskId;
+        syncCustomField("taskType", "customTaskWrap", "customTask");
+        form.querySelectorAll('input[name="evidence"]').forEach((item) => {
+          item.checked = task.evidence.includes(item.value);
+        });
+        document.getElementById("product").focus();
+        document.getElementById("command").scrollIntoView({behavior: "smooth", block: "start"});
+        showToast(task.label + " 기준을 지시서에 적용했습니다.");
+      }
+
+      function formData() {
+        const taskId = form.taskType.value;
+        const taskLabel = taskId === CUSTOM_OPTION ? document.getElementById("customTask").value.trim() : (taskMap[taskId] ? taskMap[taskId].label : "");
+        return {
+          product: form.product.value.trim(),
+          stage: resolvedSelectValue("stage", "customStage"),
+          taskId,
+          taskLabel,
+          decision: resolvedSelectValue("decision", "customDecision"),
+          marketRegion: document.getElementById("marketRegion").value,
+          context: form.context.value.trim(),
+          evidence: checkedEvidence(),
+          vocText: document.getElementById("vocText").value.trim(),
+          sourceUrls: document.getElementById("sourceUrls").value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean),
+          depth: document.getElementById("researchDepth").value
+        };
+      }
+
+      function buildBrief(data) {
+        const task = taskForData(data);
+        if (!task) return "요청 업무를 먼저 선택해 주세요.";
+        const context = data.context || "추가 배경 없음. 조사 과정에서 확인할 질문을 별도 기록할 것.";
+        const sourceUrls = data.sourceUrls || [];
+        const evidence = data.evidence.length ? data.evidence.join(", ") : "담당팀이 결정에 필요한 최소 근거를 제안";
+        const chartPlan = chartPlanForEvidence(data.evidence);
+        return [
+          "[마케팅팀 업무 지시서]",
+          "",
+          "1. 대표 지시",
+          "- 제품/제품군: " + (data.product || "미입력"),
+          "- 고객 단계: " + (data.stage || "미입력"),
+          "- 요청 업무: " + task.label,
+          "- 필요한 결정: " + (data.decision || "미입력"),
+          "- 배경/확인사항: " + context,
+          "- 조사 깊이: " + ({quick: "빠른 검토", standard: "표준 조사", deep: "심층 조사"}[data.depth] || "표준 조사"),
+          "- 제공 VOC: " + (data.vocText ? "있음" : "없음"),
+          "- 우선 출처: " + (sourceUrls.length ? sourceUrls.length + "개" : "없음"),
+          "",
+          "2. 담당 조직",
+          "- 주관: " + task.lead,
+          "- 협업: " + task.support,
+          "",
+          "3. 조사 순서와 제출 내용",
+          "- " + task.output,
+          "",
+          "4. 필수 근거",
+          "- " + evidence,
+          "- 실제 제품을 다루면 제품명, 판매 링크, 가격, 제품 사진, 확인일, 출처 유형을 후보별로 맞출 것.",
+          "- 매출 수치가 추정이면 입력값 출처, 산식, 기간, 가정, 범위, 한계를 함께 제시할 것.",
+          "- 유아용품은 연령·발달 단계와 안전·표현 경계를 먼저 확정할 것.",
+          "",
+          "5. 대표 보고 형식",
+          "- 첫 화면: 결론, 필요한 결정, 핵심 숫자, 가장 큰 리스크",
+          "- 본문: 고객 VOC, 경쟁 근거, 성공 원인, 페르소나, 상품/유통 제안, 가격·매출, 실행 순서",
+          "- 마지막: 진행·보류·중단 조건과 다음 행동",
+          "- 회사 언어로 작성하고 내부 운영 용어는 노출하지 말 것.",
+          "",
+          "6. 차트 구성",
+          ...(chartPlan.length ? chartPlan.map((item) => "- " + item) : ["- 근거별 추천 차트를 차트 설계실에서 선택할 것"]),
+          "- 모든 차트에 출처, 확인일, 표본·기간, 단위, 추정 여부를 표기할 것.",
+          "",
+          "7. 완료 기준",
+          "- 전략팀: 사업 결론과 선택지가 분명한지 확인",
+          "- 티처팀: 근거 누락, 설명 품질, 다음 업무 재현 가능성을 확인",
+          "- 필수 실제품 근거가 없으면 가능한 회수 경로를 사용한 뒤 상태와 남은 확인을 명시"
+        ].join("\n");
+      }
+
+      function openBrief(data) {
+        activeBrief = buildBrief(data);
+        briefContent.textContent = activeBrief;
+        if (typeof dialog.showModal === "function") dialog.showModal();
+      }
+
+      function renderOrders() {
+        const orders = loadOrders();
+        orderCount.textContent = orders.length;
+        const visible = activeFilter === "all" ? orders : orders.filter((order) => order.status === activeFilter);
+        if (!visible.length) {
+          orderList.innerHTML = '<div class="empty-state">' + (orders.length ? "이 상태의 업무가 없습니다." : "아직 등록된 업무가 없습니다. 위에서 첫 업무를 등록해 주세요.") + '</div>';
+          return;
+        }
+        orderList.innerHTML = visible.map((order) => {
+          const task = taskMap[order.taskId] || {label: order.taskLabel || "마케팅 업무"};
+          const states = ["지시", "조사", "검토", "보고"].map((state) => '<option' + (state === order.status ? ' selected' : '') + '>' + state + '</option>').join("");
+          return '<article class="order-row" data-id="' + escapeHtml(order.id) + '">' +
+            '<div><span class="order-code">' + escapeHtml(order.code) + '</span></div>' +
+            '<div class="order-main"><strong>' + escapeHtml(order.product) + '</strong><span>' + escapeHtml(order.stage) + '</span></div>' +
+            '<div class="order-task"><strong>' + escapeHtml(task.label) + '</strong><span>' + escapeHtml(order.decision) + '</span></div>' +
+            '<div class="order-status"><select aria-label="업무 상태" data-action="status">' + states + '</select></div>' +
+            '<div class="order-actions"><button class="icon-btn" type="button" data-action="brief" title="지시서 보기" aria-label="지시서 보기">문서</button><button class="icon-btn" type="button" data-action="delete" title="업무 삭제" aria-label="업무 삭제">삭제</button></div>' +
+          '</article>';
+        }).join("");
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        const data = formData();
+        const now = new Date();
+        const id = String(now.getTime());
+        const code = "MKT-" + now.getFullYear() + String(now.getMonth() + 1).padStart(2, "0") + String(now.getDate()).padStart(2, "0") + "-" + String(loadOrders().length + 1).padStart(2, "0");
+        const order = {...data, id, code, status: "지시", createdAt: now.toISOString()};
+        const orders = [order, ...loadOrders()];
+        if (saveOrders(orders)) {
+          renderOrders();
+          openBrief(order);
+          form.reset();
+          form.querySelector('input[value="고객 VOC"]').checked = true;
+          syncCustomField("stage", "customStageWrap", "customStage");
+          syncCustomField("taskType", "customTaskWrap", "customTask");
+          syncCustomField("decision", "customDecisionWrap", "customDecision");
+          showToast("업무가 등록됐습니다.");
+        }
+      });
+
+      runResearchButton.addEventListener("click", async () => {
+        if (!form.reportValidity()) return;
+        const data = formData();
+        if (!taskForData(data)) {
+          showToast("요청 업무를 선택하거나 직접 입력해 주세요.");
+          return;
+        }
+        runResearchButton.disabled = true;
+        runResearchButton.textContent = "조사 등록 중";
+        try {
+          const payload = await fetchJson("/api/research", {method: "POST", body: JSON.stringify(data)});
+          researchJobs = [payload.job, ...researchJobs.filter((job) => job.id !== payload.job.id)];
+          renderResearchRuns();
+          scheduleResearchPoll();
+          document.getElementById("runs").scrollIntoView({behavior: "smooth", block: "start"});
+          showToast("마케팅팀 조사를 시작했습니다.");
+        } catch (error) {
+          showToast(error.message);
+        } finally {
+          runResearchButton.disabled = !(runtimeConfig && runtimeConfig.ready);
+          runResearchButton.textContent = "조사 실행";
+        }
+      });
+
+      document.getElementById("previewBrief").addEventListener("click", () => openBrief(formData()));
+      document.getElementById("closeBrief").addEventListener("click", () => dialog.close());
+      document.getElementById("confirmBrief").addEventListener("click", () => dialog.close());
+      document.getElementById("copyBrief").addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(activeBrief); showToast("지시서를 복사했습니다."); }
+        catch (_) { showToast("복사가 제한됩니다. 지시서 내용을 직접 선택해 주세요."); }
+      });
+
+      document.querySelectorAll(".menu-item").forEach((button) => button.addEventListener("click", () => applyTask(button.dataset.task)));
+      document.querySelectorAll(".filter-btn").forEach((button) => button.addEventListener("click", () => {
+        activeFilter = button.dataset.filter;
+        document.querySelectorAll(".filter-btn").forEach((item) => item.classList.toggle("active", item === button));
+        renderOrders();
+      }));
+
+      [
+        ["stage", "customStageWrap", "customStage"],
+        ["taskType", "customTaskWrap", "customTask"],
+        ["decision", "customDecisionWrap", "customDecision"]
+      ].forEach(([selectId, wrapId, inputId]) => {
+        document.getElementById(selectId).addEventListener("change", () => {
+          const isCustom = syncCustomField(selectId, wrapId, inputId);
+          if (isCustom) document.getElementById(inputId).focus();
+        });
+      });
+
+      document.getElementById("chartEvidence").addEventListener("change", (event) => {
+        const isCustom = syncCustomField("chartEvidence", "customChartEvidenceWrap", "customChartEvidence");
+        const evidenceId = currentChartEvidenceId();
+        const evidence = evidenceForId(evidenceId);
+        const preferences = loadChartPreferences();
+        selectedChartType = preferences[evidenceId] || evidence.recommended;
+        updateChartStudio();
+        if (isCustom) document.getElementById("customChartEvidence").focus();
+      });
+
+      document.getElementById("customChartEvidence").addEventListener("input", () => {
+        const evidenceId = currentChartEvidenceId();
+        const preferences = loadChartPreferences();
+        selectedChartType = preferences[evidenceId] || "bar";
+        updateChartStudio();
+      });
+
+      document.querySelectorAll(".chart-type-btn").forEach((button) => button.addEventListener("click", () => {
+        selectedChartType = button.dataset.chart;
+        updateChartStudio();
+      }));
+
+      document.getElementById("saveChartChoice").addEventListener("click", () => {
+        const customInput = document.getElementById("customChartEvidence");
+        if (document.getElementById("chartEvidence").value === CUSTOM_OPTION && !customInput.value.trim()) {
+          showToast("근거 유형을 직접 입력해 주세요.");
+          customInput.focus();
+          return;
+        }
+        const evidenceId = currentChartEvidenceId();
+        const evidence = evidenceForId(evidenceId);
+        const preferences = loadChartPreferences();
+        preferences[evidenceId] = selectedChartType;
+        if (saveChartPreferences(preferences)) {
+          renderChartPlan();
+          showToast(evidence.label + "는 " + chartTypes[selectedChartType].label + "로 보고합니다.");
+        }
+      });
+
+      document.getElementById("chartPlanList").addEventListener("click", (event) => {
+        const evidenceId = event.target.dataset.removeChart;
+        if (!evidenceId) return;
+        const preferences = loadChartPreferences();
+        delete preferences[evidenceId];
+        saveChartPreferences(preferences);
+        renderChartPlan();
+        showToast("차트 선택을 삭제했습니다.");
+      });
+
+      orderList.addEventListener("change", (event) => {
+        if (event.target.dataset.action !== "status") return;
+        const row = event.target.closest(".order-row");
+        const orders = loadOrders().map((order) => order.id === row.dataset.id ? {...order, status: event.target.value} : order);
+        saveOrders(orders);
+        showToast("업무 상태를 변경했습니다.");
+      });
+
+      orderList.addEventListener("click", (event) => {
+        const action = event.target.dataset.action;
+        if (!action) return;
+        const row = event.target.closest(".order-row");
+        const orders = loadOrders();
+        const order = orders.find((item) => item.id === row.dataset.id);
+        if (action === "brief" && order) openBrief(order);
+        if (action === "delete" && order && window.confirm(order.product + " 업무를 삭제할까요?")) {
+          saveOrders(orders.filter((item) => item.id !== order.id));
+          renderOrders();
+          showToast("업무를 삭제했습니다.");
+        }
+      });
+
+      runList.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-run-action]");
+        if (!button) return;
+        const action = button.dataset.runAction;
+        const jobId = button.dataset.runId;
+        const job = researchJobs.find((item) => item.id === jobId);
+        if (!job) return;
+        try {
+          if (action === "cancel" && window.confirm(job.request.product + " 조사를 중단할까요?")) {
+            await fetchJson("/api/jobs/" + jobId + "/cancel", {method: "POST"});
+            showToast("조사 중단을 요청했습니다.");
+          }
+          if (action === "retry") {
+            const payload = await fetchJson("/api/jobs/" + jobId + "/retry", {method: "POST"});
+            researchJobs = [payload.job, ...researchJobs];
+            showToast("같은 조건으로 조사를 다시 시작했습니다.");
+          }
+          if (action === "delete" && window.confirm(job.request.product + " 조사 기록과 보고서를 삭제할까요?")) {
+            await fetchJson("/api/jobs/" + jobId, {method: "DELETE"});
+            researchJobs = researchJobs.filter((item) => item.id !== jobId);
+            showToast("조사 기록을 삭제했습니다.");
+          }
+          renderResearchRuns();
+          scheduleResearchPoll();
+        } catch (error) {
+          showToast(error.message);
+        }
+      });
+
+      document.getElementById("exportOrders").addEventListener("click", () => {
+        const data = JSON.stringify({exportedAt: new Date().toISOString(), orders: loadOrders()}, null, 2);
+        const url = URL.createObjectURL(new Blob([data], {type: "application/json"}));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "marketing-team-orders.json";
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast("업무 목록을 내보냈습니다.");
+      });
+
+      const mobileMenu = document.getElementById("mobileMenu");
+      mobileMenu.addEventListener("click", () => document.body.classList.toggle("nav-open"));
+      document.querySelectorAll(".sidebar a").forEach((link) => link.addEventListener("click", () => document.body.classList.remove("nav-open")));
+      document.addEventListener("click", (event) => {
+        if (document.body.classList.contains("nav-open") && !event.target.closest(".sidebar") && !event.target.closest("#mobileMenu")) document.body.classList.remove("nav-open");
+      });
+
+      const contentRoot = document.querySelector("main.content");
+      ["command", "runs", "orders", "charts", "reports", "quality", "team"].forEach((sectionId) => {
+        const section = document.getElementById(sectionId);
+        if (section) contentRoot.appendChild(section);
+      });
+
+      const operatingMenu = document.getElementById("operatingMenu");
+      const sections = [...document.querySelectorAll("main .section")];
+      const navLinks = [...document.querySelectorAll(".sidebar nav a")];
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        navLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === "#" + visible.target.id));
+        if (visible.target.id === "quality" || visible.target.id === "team") operatingMenu.open = true;
+      }, {rootMargin: "-20% 0px -65%", threshold: [0, .25, .5]});
+      sections.forEach((section) => observer.observe(section));
+
+      async function bootstrap() {
+        await loadUiState();
+        renderOrders();
+        renderChartPlan();
+        renderChartGallery();
+        await Promise.all([loadRuntimeConfig(), loadResearchRuns()]);
+      }
+      document.getElementById("currentDate").textContent = "기준일 " + new Intl.DateTimeFormat("ko-KR", {year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date());
+      syncCustomField("stage", "customStageWrap", "customStage");
+      syncCustomField("taskType", "customTaskWrap", "customTask");
+      syncCustomField("decision", "customDecisionWrap", "customDecision");
+      syncCustomField("chartEvidence", "customChartEvidenceWrap", "customChartEvidence");
+      updateChartStudio();
+      bootstrap();
+      window.addEventListener("resize", () => {
+        window.clearTimeout(updateChartStudio.resizeTimer);
+        updateChartStudio.resizeTimer = window.setTimeout(() => { renderChartGallery(); updateChartStudio(); }, 120);
+      });
+    })();
+  </script>
+</body>
+</html>

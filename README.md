@@ -1,0 +1,96 @@
+# Marketing Research Companion
+
+사용자가 자기 ChatGPT 계정으로 Codex를 연결해 육아·키즈 제품 시장조사, 경쟁 분석,
+VOC 분석, 상품·가격 제안과 대표 보고서 생성을 실행하는 로컬 웹 서비스입니다.
+
+이 저장소는 Workbench나 사내 pack을 런타임에 요구하지 않습니다. 조사 지침, 구조화
+스키마, 품질 검사와 보고서 렌더러가 모두 프로젝트 안에 포함됩니다.
+
+## Product contract
+
+- 배포 형태: 사용자별 로컬 컴패니언 서비스
+- 인증: Codex App Server가 관리하는 ChatGPT 브라우저 로그인
+- 사용량: 연결한 사용자의 ChatGPT/Codex 플랜과 워크스페이스 정책 적용
+- 애플리케이션 비밀: OpenAI API key 또는 서비스 공용 인증키 불필요
+- 저장 위치: 설치한 기기의 `.data`
+- 네트워크: 기본값은 `127.0.0.1`; 원격 열람은 SSH 포트 포워딩 권장
+
+여러 사람이 하나의 중앙 서버에 로그인하는 SaaS가 아닙니다. 여러 사용자는 각자 이
+저장소를 설치하고 자신의 ChatGPT 계정을 연결합니다.
+
+## Requirements
+
+- Node.js 20 이상
+- ChatGPT 데스크톱 앱에 포함된 Codex 또는 Codex CLI
+- Codex 사용 권한이 있는 ChatGPT 계정
+
+외부 npm 패키지는 사용하지 않습니다.
+macOS에서는 ChatGPT 데스크톱 앱에 포함된 Codex 실행 파일을 자동으로 찾습니다. 별도
+CLI 경로를 사용할 때만 `.env`의 `CODEX_BIN`을 지정합니다.
+
+## Install and onboard
+
+```bash
+git clone https://github.com/NineTigers/marketing-research-companion.git
+cd marketing-research-companion
+npm run doctor
+npm start
+```
+
+`http://127.0.0.1:8787`을 엽니다. 이미 Codex에 ChatGPT로 로그인했다면 같은 로컬
+자격 증명을 재사용합니다. 로그아웃 상태라면 화면의 **ChatGPT로 연결**을 눌러 브라우저
+로그인을 완료합니다.
+
+Codex에게 Git 링크와 함께 설치를 맡길 때 사용할 지시는 다음과 같습니다.
+
+```text
+이 저장소를 로컬에 설치하고 npm run doctor를 통과시킨 뒤 서비스를 시작해줘.
+웹 온보딩에서 내 ChatGPT 계정 연결 상태를 확인하고 접속 URL을 알려줘.
+```
+
+## Runtime
+
+앱 서버는 로컬에서 `codex app-server --listen stdio://`를 실행합니다. 웹은 계정 상태와
+OAuth 시작만 요청하며 토큰을 읽거나 저장하지 않습니다. 조사마다 읽기 전용 Codex
+스레드를 만들고 JSON Schema로 결과 형식을 제한합니다.
+
+```text
+Browser -> local Node server -> Codex App Server -> user's ChatGPT account
+                         |-> .data jobs and reports
+```
+
+## Commands
+
+```bash
+npm run doctor  # Node, Codex, ChatGPT 로그인 점검
+npm start       # 로컬 서비스 시작
+npm run service:install # macOS/Linux 로그인 시 자동 시작
+npm run release:export  # 공개 저장소용 독립 배포본 생성
+npm test        # 자동 테스트
+npm run check   # 구문 검사
+```
+
+`MARKETING_RUNTIME=demo npm start`는 네트워크 조사 없이 설치와 화면 흐름만 확인합니다.
+Docker 이미지는 Codex 인증을 전달하지 않으므로 데모 모드 전용입니다.
+
+## API
+
+- `GET /api/config`: 런타임과 연결 계정 상태
+- `POST /api/auth/chatgpt`: Codex 관리형 ChatGPT 로그인 시작
+- `POST /api/auth/logout`: 로컬 Codex 로그아웃
+- `GET /api/runtime/limits`: 연결 계정의 Codex 사용량 상태
+- `POST /api/research`: 조사 시작
+- `GET /api/jobs`, `GET /api/jobs/:id`: 작업 조회
+- `POST /api/jobs/:id/cancel`, `POST /api/jobs/:id/retry`: 작업 제어
+- `GET /api/jobs/:id/report`: 보고서 열람
+
+## Security
+
+앱은 개인 기기의 단일 사용자 로컬 서비스로 설계되었습니다. 인터넷에 직접 노출하지
+마세요. 다른 기기에서 볼 때는 `ssh -L 8787:127.0.0.1:8787 <host>`처럼 포트 포워딩을
+사용하고 [SECURITY.md](SECURITY.md)를 확인하세요. VOC와 내부 상품 계획은 `.data`에
+저장되므로 운영체제 계정과 디스크 권한으로 보호해야 합니다.
+
+## License
+
+[MIT](LICENSE)
