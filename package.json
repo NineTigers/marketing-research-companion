@@ -11,7 +11,7 @@
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "test": "node --test test",
-    "check": "node --check server.mjs && node --check lib/codex-bin.mjs && node --check lib/codex-runtime.mjs && node --check lib/provider.mjs && node --check scripts/service.mjs",
+    "check": "node --check server.mjs && node --check lib/codex-bin.mjs && node --check lib/codex-runtime.mjs && node --check lib/provider.mjs && node --check scripts/service.mjs && node scripts/check-index.mjs",
     "doctor": "node scripts/doctor.mjs",
     "service:install": "node scripts/service.mjs install",
     "service:status": "node scripts/service.mjs status",

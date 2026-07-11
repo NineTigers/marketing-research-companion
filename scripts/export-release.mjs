@@ -1,4 +1,4 @@
-import {cp, mkdir, readFile, rm, writeFile} from "node:fs/promises";
+import {cp, mkdir, readFile, readdir, rm, writeFile} from "node:fs/promises";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
 
@@ -10,8 +10,10 @@ const files = [
 ];
 const directories = [".github", "lib", "scripts", "test"];
 
-await rm(target, {recursive: true, force: true});
 await mkdir(target, {recursive: true});
+for (const entry of await readdir(target)) {
+  if (entry !== ".git") await rm(path.join(target, entry), {recursive: true, force: true});
+}
 for (const file of files) await cp(path.join(root, file), path.join(target, file));
 for (const directory of directories) await cp(path.join(root, directory), path.join(target, directory), {recursive: true});
 

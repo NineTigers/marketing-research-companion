@@ -1432,12 +1432,14 @@
 
       async function loadResearchRuns(silent = false) {
         try {
-          const payload = await fetchJson("/api/jobs");
+          const payload = await fetchJson("/api/jobs?ts=" + Date.now(), {cache: "no-store"});
           researchJobs = payload.jobs || [];
           renderResearchRuns();
           scheduleResearchPoll();
         } catch (error) {
           if (!silent) runList.innerHTML = '<div class="empty-state">조사 실행 서버에 연결할 수 없습니다.</div>';
+          window.clearTimeout(researchPollTimer);
+          researchPollTimer = window.setTimeout(() => loadResearchRuns(true), 3000);
         }
       }
 
@@ -1581,7 +1583,7 @@
           "",
           "4. 필수 근거",
           "- " + evidence,
-          "- 실제 제품을 다루면 제품명, 판매 링크, 가격, 제품 사진, 확인일, 출처 유형을 후보별로 맞출 것.",
+          "- 실제 제품을 다루면 제품명, 판매 링크, 가격, 확인일, 출처 유형을 후보별로 맞출 것.",
           "- 매출 수치가 추정이면 입력값 출처, 산식, 기간, 가정, 범위, 한계를 함께 제시할 것.",
           "- 유아용품은 연령·발달 단계와 안전·표현 경계를 먼저 확정할 것.",
           "",
