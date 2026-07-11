@@ -28,5 +28,13 @@ Do not bind the built-in server to a public interface. A centralized or multi-te
 requires a separate identity layer, tenant isolation, encrypted storage, rate limiting, audit logs,
 and a security review; those controls are intentionally outside this local companion product.
 
+## Web updates
+
+The web updater accepts only the official `NineTigers/marketing-research-companion` origin, the
+`main` branch, a clean tracked worktree, and a fast-forward merge. It does not execute shell text,
+force-reset local files, or update while research jobs are running. Diverged histories and local
+tracked changes require manual review. Keep the repository origin under the intended GitHub account;
+changing that remote changes the software supply source and disables the built-in updater.
+
 Report vulnerabilities privately to the repository owner. Never include Codex credentials,
 customer data, or unpublished product information in a public issue.

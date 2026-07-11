@@ -8,6 +8,7 @@ import {CodexRuntime} from "./lib/codex-runtime.mjs";
 import {createProvider} from "./lib/provider.mjs";
 import {FileStore} from "./lib/storage.mjs";
 import {createJobRecord, normalizeRequest, runResearchJob} from "./lib/workflow.mjs";
+import {GitUpdater} from "./lib/updater.mjs";
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -105,7 +106,11 @@ export async function createMarketingServer(options = {}) {
     requestTimeoutMs: config.requestTimeoutMs
   }) : null);
   const provider = options.provider || createProvider(config, runtime);
+  const updater = options.updater || new GitUpdater({rootDir: config.rootDir, version: config.version});
+  const managedService = options.managedService ?? Boolean(process.env.XPC_SERVICE_NAME || process.env.INVOCATION_ID);
+  const restartProcess = options.restartProcess || (() => process.exit(0));
   const activeRuns = new Map();
+  let updateInProgress = false;
 
   async function runtimeStatus() {
     if (config.mode === "demo") return {installed: true, connected: true, ready: true, accountType: "demo", email: null, planType: null, imageGenerationAvailable: false, reason: null};
@@ -164,6 +169,28 @@ export async function createMarketingServer(options = {}) {
       if (pathname === "/api/runtime/limits" && req.method === "GET") {
         await requireConnected();
         return json(res, 200, await runtime.rateLimits());
+      }
+
+      if (pathname === "/api/update/check" && req.method === "POST") {
+        if (updateInProgress) return json(res, 409, {error: "업데이트가 이미 진행 중입니다."});
+        return json(res, 200, {update: await updater.check({fetchRemote: true})});
+      }
+
+      if (pathname === "/api/update/apply" && req.method === "POST") {
+        if (updateInProgress) return json(res, 409, {error: "업데이트가 이미 진행 중입니다."});
+        if (activeRuns.size) return json(res, 409, {error: "실행 중인 조사가 있습니다. 완료하거나 중단한 뒤 업데이트해 주세요."});
+        updateInProgress = true;
+        try {
+          const update = await updater.apply();
+          json(res, 200, {update: {...update, automaticRestart: update.applied && managedService}});
+          if (update.applied && managedService) setTimeout(async () => {
+            try { await runtime?.close(); } catch (_) { /* Service manager will restart the process. */ }
+            restartProcess();
+          }, 400);
+          return;
+        } finally {
+          updateInProgress = false;
+        }
       }
 
       if (pathname === "/api/jobs" && req.method === "GET") {
@@ -253,7 +280,7 @@ export async function createMarketingServer(options = {}) {
     activeRuns.forEach((controller) => controller.abort());
     runtime?.close().catch(() => {});
   });
-  return {server, config, store, runtime};
+  return {server, config, store, runtime, updater};
 }
 
 export async function listenWithFallback(server, host, preferredPort, attempts = 20) {

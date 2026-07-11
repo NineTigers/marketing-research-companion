@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {mkdtemp, readFile, rm, writeFile} from "node:fs/promises";
+import {mkdtemp, mkdir, readFile, rm, writeFile} from "node:fs/promises";
+import {execFile} from "node:child_process";
+import {promisify} from "node:util";
 import os from "node:os";
 import path from "node:path";
 import {loadConfig, publicConfig} from "../lib/config.mjs";
@@ -15,6 +17,9 @@ import {calculateSalesEstimate} from "../lib/commercial-calculator.mjs";
 import {collectOfficialProductImages, extractProductImageCandidates} from "../lib/product-images.mjs";
 import {renderCharts} from "../lib/chart-renderer.mjs";
 import {CodexRuntime} from "../lib/codex-runtime.mjs";
+import {cleanRemote, GitUpdater} from "../lib/updater.mjs";
+
+const execFileAsync = promisify(execFile);
 
 async function tempRoot(t) {
   const root = await mkdtemp(path.join(os.tmpdir(), "marketing-team-"));
@@ -251,6 +256,44 @@ test("Codex image turns include local official-image references", async () => {
   assert.equal(result.savedPath, "/tmp/generated.png");
 });
 
+test("Git updater detects and applies only clean fast-forward updates", async (t) => {
+  const root = await tempRoot(t);
+  const remote = path.join(root, "remote.git");
+  const seed = path.join(root, "seed");
+  const app = path.join(root, "app");
+  const git = async (cwd, args) => execFileAsync("git", args, {cwd});
+  await git(root, ["init", "--bare", remote]);
+  await mkdir(seed);
+  await git(seed, ["init", "-b", "main"]);
+  await git(seed, ["config", "user.email", "test@example.com"]);
+  await git(seed, ["config", "user.name", "Updater Test"]);
+  await writeFile(path.join(seed, "version.txt"), "v1\n");
+  await git(seed, ["add", "version.txt"]);
+  await git(seed, ["commit", "-m", "v1"]);
+  await git(seed, ["remote", "add", "origin", remote]);
+  await git(seed, ["push", "-u", "origin", "main"]);
+  await git(remote, ["symbolic-ref", "HEAD", "refs/heads/main"]);
+  await git(root, ["clone", remote, app]);
+  await writeFile(path.join(seed, "version.txt"), "v2\n");
+  await git(seed, ["add", "version.txt"]);
+  await git(seed, ["commit", "-m", "v2"]);
+  await git(seed, ["push", "origin", "main"]);
+
+  const updater = new GitUpdater({rootDir: app, version: "test", expectedRepository: remote});
+  const checked = await updater.check();
+  assert.equal(checked.supported, true);
+  assert.equal(checked.updateAvailable, true);
+  const applied = await updater.apply();
+  assert.equal(applied.applied, true);
+  assert.equal(await readFile(path.join(app, "version.txt"), "utf8"), "v2\n");
+
+  await writeFile(path.join(app, "version.txt"), "local change\n");
+  const dirty = await updater.check({fetchRemote: false});
+  assert.match(dirty.reason, /로컬 변경/);
+  assert.equal(dirty.updateAvailable, false);
+  assert.equal(cleanRemote("https://github.com/NineTigers/marketing-research-companion.git"), "github.com/NineTigers/marketing-research-companion");
+});
+
 test("HTTP onboarding reports and starts the user's ChatGPT OAuth flow", async (t) => {
   const root = await tempRoot(t);
   const config = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "codex", DATA_DIR: ".data"}});
@@ -290,7 +333,18 @@ test("HTTP onboarding rejects an unsafe login URL", async (t) => {
 test("HTTP API runs, persists, opens, retries, and deletes research", async (t) => {
   const root = await tempRoot(t);
   const config = demoConfig(root);
-  const {server, store} = await createMarketingServer({config, provider: new DemoProvider()});
+  const updateCalls = [];
+  const updater = {
+    check: async () => {
+      updateCalls.push("check");
+      return {supported: true, currentVersion: "test", currentCommit: "a", latestCommit: "b", updateAvailable: true, upToDate: false};
+    },
+    apply: async () => {
+      updateCalls.push("apply");
+      return {supported: true, applied: true, currentCommit: "b", latestCommit: "b", updateAvailable: false, upToDate: true, restartRequired: true};
+    }
+  };
+  const {server, store} = await createMarketingServer({config, provider: new DemoProvider(), updater, managedService: false});
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const address = server.address();
@@ -298,6 +352,12 @@ test("HTTP API runs, persists, opens, retries, and deletes research", async (t) 
 
   const health = await fetch(base + "/api/health").then((response) => response.json());
   assert.deepEqual({ok: health.ok, mode: health.mode, ready: health.ready}, {ok: true, mode: "demo", ready: true});
+  const updateCheck = await fetch(base + "/api/update/check", {method: "POST"}).then((response) => response.json());
+  assert.equal(updateCheck.update.updateAvailable, true);
+  const updateApply = await fetch(base + "/api/update/apply", {method: "POST"}).then((response) => response.json());
+  assert.equal(updateApply.update.applied, true);
+  assert.equal(updateApply.update.automaticRestart, false);
+  assert.deepEqual(updateCalls, ["check", "apply"]);
 
   const stateResponse = await fetch(base + "/api/ui-state", {
     method: "PUT", headers: {"content-type": "application/json"},
