@@ -8,7 +8,7 @@ const files = [
   ".dockerignore", ".env.example", ".gitignore", "Dockerfile", "LICENSE", "README.md", "SECURITY.md",
   "index.html", "package.json", "server.mjs"
 ];
-const directories = [".github", "lib", "scripts", "test"];
+const directories = [".github", "docs", "lib", "scripts", "test"];
 
 await mkdir(target, {recursive: true});
 for (const entry of await readdir(target)) {
