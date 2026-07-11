@@ -48,12 +48,17 @@ npm start
 접속 URL을 출력합니다. 자동 시작 서비스의 실제 URL은 `npm run service:status`에서도
 확인할 수 있습니다.
 
-Codex에게 Git 링크와 함께 설치를 맡길 때 사용할 지시는 다음과 같습니다.
+Codex에게 Git 링크와 함께 설치를 맡길 때 사용할 간단한 지시는 다음과 같습니다.
 
 ```text
-이 저장소를 로컬에 설치하고 npm run doctor를 통과시킨 뒤 서비스를 시작해줘.
-웹 온보딩에서 내 ChatGPT 계정 연결 상태를 확인하고 접속 URL을 알려줘.
+현재 운영체제에서 Git, Node.js 20 이상, Codex 요구사항을 먼저 확인해줘.
+누락된 시스템 도구가 있으면 설치 계획과 권한 변경을 한 번에 설명하고 내 승인을 받은 뒤 설치해줘.
+그 다음 이 저장소를 로컬에 설치하고 doctor, check, test를 통과시킨 뒤 서비스를 시작해줘.
+내 ChatGPT 계정 연결 상태를 확인하고 실제 접속 URL, 설치 위치와 재시작 방법을 알려줘.
 ```
+
+시스템 요구사항 설치까지 포함한 상세 지시는
+[Codex용 설치·온보딩 전체 지시문](docs/install-onboarding-order-ko.md)을 사용하세요.
 
 ## Runtime
 
