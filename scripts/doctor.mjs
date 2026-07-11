@@ -23,5 +23,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log("\n준비 완료. `npm start` 후 http://127.0.0.1:8787 을 여세요.");
+  console.log("\n준비 완료. `npm start` 후 터미널에 출력된 URL을 여세요. 기본값은 http://127.0.0.1:8787 입니다.");
 }
