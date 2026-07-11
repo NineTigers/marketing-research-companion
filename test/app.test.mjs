@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {mkdtemp, readFile, rm} from "node:fs/promises";
+import {mkdtemp, readFile, rm, writeFile} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {loadConfig, publicConfig} from "../lib/config.mjs";
@@ -56,6 +56,8 @@ test("configuration pins Terra high without API secrets", async (t) => {
   const fallbackVisible = publicConfig(config, {connected: true, ready: true, selectedModel: "gpt-5.5", fallbackUsed: true});
   assert.equal(fallbackVisible.model, "gpt-5.5");
   assert.equal(fallbackVisible.fallbackUsed, true);
+  const imageVisible = publicConfig(config, {connected: true, ready: true, selectedModel: "gpt-5.6-terra", imageGenerationAvailable: true});
+  assert.equal(imageVisible.capabilities.imageGeneration, true);
   assert.equal("apiKey" in visible, false);
   assert.equal("baseUrl" in config, false);
   assert.equal(typeof resolveCodexBin(), "string");
@@ -64,6 +66,8 @@ test("configuration pins Terra high without API secrets", async (t) => {
 test("request normalization rejects missing business scope", () => {
   assert.throws(() => normalizeRequest({product: "", stage: "토들러", decision: "진행"}), /필수 입력/);
   assert.equal(request({sourceUrls: ["javascript:alert(1)", "https://example.com"]}).sourceUrls.length, 1);
+  assert.equal(request().generateImages, false);
+  assert.equal(request({generateImages: true}).generateImages, true);
 });
 
 test("report renderer escapes user and model content", () => {
@@ -96,7 +100,7 @@ test("demo workflow persists a complete report", async (t) => {
   const completed = await store.getJob(job.id);
   assert.equal(completed.status, "completed_with_warnings");
   assert.match(completed.reportUrl, /\/report$/);
-  assert.equal(completed.agents.every((agent) => ["completed", "warning"].includes(agent.status)), true);
+  assert.equal(completed.agents.every((agent) => ["completed", "warning", "skipped"].includes(agent.status)), true);
   const html = await store.readReport(job.id);
   assert.match(html, /데모 분석/);
   assert.match(html, /고객 반응/);
@@ -104,14 +108,37 @@ test("demo workflow persists a complete report", async (t) => {
   assert.equal(data.mode, "demo");
 });
 
+test("optional image generation stores and embeds a job asset", async (t) => {
+  const root = await tempRoot(t);
+  const config = demoConfig(root);
+  const store = new FileStore({dataDir: config.dataDir, reportDir: config.reportDir});
+  await store.init();
+  const generatedPath = path.join(root, "generated.png");
+  await writeFile(generatedPath, Buffer.from("89504e470d0a1a0a", "hex"));
+  const provider = new DemoProvider();
+  provider.generateProductImage = async () => ({savedPath: generatedPath, revisedPrompt: "제품 사용 장면"});
+  const job = createJobRecord(request({generateImages: true}), config);
+  await store.createJob(job);
+  await runResearchJob({jobId: job.id, store, provider, signal: new AbortController().signal});
+  const completed = await store.getJob(job.id);
+  assert.match(completed.generatedImage.url, /\/assets\/proposal-image\.png$/);
+  assert.equal(completed.agents.find((agent) => agent.id === "visual").status, "completed");
+  assert.ok(await store.readJobAssetPath(job.id, "proposal-image.png"));
+  assert.match(await store.readReport(job.id), /proposal-visual/);
+});
+
 test("Codex provider requests web evidence and structured output from the account runtime", async () => {
   const demoReport = await new DemoProvider().synthesize({request: request(), sources: []});
   const calls = [];
+  const imageCalls = [];
   const runtime = {listModels: async () => [{id: "gpt-5.5", model: "gpt-5.5"}], runStructured: async (input) => {
     calls.push(input);
     if (calls.length === 1) return {data: {text: "source-backed research", sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}]}};
     if (calls.length === 2) return {data: demoReport};
     return {data: {sources: [{url: "https://example.com/source", title: "Example", checkedAt: "2026-07-11"}], report: demoReport}};
+  }, runImageGeneration: async (input) => {
+    imageCalls.push(input);
+    return {savedPath: "/tmp/generated.png", status: "completed"};
   }};
   const provider = new CodexProvider({model: "gpt-5.6-terra", fallbackModel: "gpt-5.5", modelCandidates: ["gpt-5.6-terra", "gpt-5.5"], reasoningEffort: "high", rootDir: process.cwd()}, runtime);
   const research = await provider.webResearch({kind: "market", request: request(), depth: "quick", signal: new AbortController().signal});
@@ -129,9 +156,16 @@ test("Codex provider requests web evidence and structured output from the accoun
   const full = await provider.fullResearch({request: request(), signal: new AbortController().signal});
   assert.equal(full.report.title, demoReport.title);
   assert.match(calls[2].prompt, /제품군을 조사 경계로 고정/);
+  assert.match(calls[2].prompt, /리뷰 수÷리뷰 작성률/);
+  assert.match(calls[2].prompt, /조회 수×구매 전환율/);
+  assert.equal(calls[2].outputSchema.properties.report.properties.competitors.items.properties.salesEstimate.required.includes("method"), true);
   assert.equal(calls[2].outputSchema.required.includes("sources"), true);
   assert.equal(calls[2].model, "gpt-5.5");
   assert.equal(calls[2].effort, "high");
+  await provider.generateProductImage({request: request(), report: demoReport, signal: new AbortController().signal});
+  assert.match(imageCalls[0].prompt, /이미지 생성 도구를 정확히 한 번/);
+  assert.equal(imageCalls[0].model, "gpt-5.5");
+  assert.equal(imageCalls[0].effort, "high");
 });
 
 test("HTTP onboarding reports and starts the user's ChatGPT OAuth flow", async (t) => {
@@ -173,7 +207,7 @@ test("HTTP onboarding rejects an unsafe login URL", async (t) => {
 test("HTTP API runs, persists, opens, retries, and deletes research", async (t) => {
   const root = await tempRoot(t);
   const config = demoConfig(root);
-  const {server} = await createMarketingServer({config, provider: new DemoProvider()});
+  const {server, store} = await createMarketingServer({config, provider: new DemoProvider()});
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const address = server.address();
@@ -210,6 +244,12 @@ test("HTTP API runs, persists, opens, retries, and deletes research", async (t) 
   const reportResponse = await fetch(base + job.reportUrl);
   assert.equal(reportResponse.status, 200);
   assert.match(await reportResponse.text(), /대표 보고/);
+  const generatedPath = path.join(root, "api-generated.png");
+  await writeFile(generatedPath, Buffer.from("89504e470d0a1a0a", "hex"));
+  const asset = await store.writeGeneratedImage(job.id, {savedPath: generatedPath});
+  const assetResponse = await fetch(base + `/api/jobs/${job.id}/assets/${asset.name}`);
+  assert.equal(assetResponse.status, 200);
+  assert.equal(assetResponse.headers.get("content-type"), "image/png");
 
   const retryResponse = await fetch(base + `/api/jobs/${job.id}/retry`, {method: "POST"});
   assert.equal(retryResponse.status, 202);

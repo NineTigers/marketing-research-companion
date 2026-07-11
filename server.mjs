@@ -108,7 +108,7 @@ export async function createMarketingServer(options = {}) {
   const activeRuns = new Map();
 
   async function runtimeStatus() {
-    if (config.mode === "demo") return {installed: true, connected: true, ready: true, accountType: "demo", email: null, planType: null, reason: null};
+    if (config.mode === "demo") return {installed: true, connected: true, ready: true, accountType: "demo", email: null, planType: null, imageGenerationAvailable: false, reason: null};
     return runtime.status({requiredModels: config.modelCandidates});
   }
 
@@ -200,6 +200,21 @@ export async function createMarketingServer(options = {}) {
         securityHeaders(res);
         res.writeHead(200, {"content-type": "text/html; charset=utf-8", "cache-control": "no-store"});
         return res.end(report);
+      }
+
+      const assetMatch = pathname.match(/^\/api\/jobs\/([a-zA-Z0-9_-]{8,80})\/assets\/([a-zA-Z0-9_-]+\.(?:png|jpe?g|webp))$/i);
+      if (assetMatch && ["GET", "HEAD"].includes(req.method)) {
+        const filePath = await store.readJobAssetPath(assetMatch[1], assetMatch[2]);
+        if (!filePath) return text(res, 404, "이미지를 찾을 수 없습니다.");
+        const info = await stat(filePath);
+        securityHeaders(res);
+        res.writeHead(200, {
+          "content-type": MIME_TYPES[path.extname(filePath).toLowerCase()] || "application/octet-stream",
+          "content-length": info.size,
+          "cache-control": "private, max-age=3600"
+        });
+        if (req.method === "HEAD") return res.end();
+        return createReadStream(filePath).pipe(res);
       }
 
       const cancelMatch = pathname.match(/^\/api\/jobs\/([a-zA-Z0-9_-]{8,80})\/cancel$/);

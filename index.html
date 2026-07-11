@@ -230,6 +230,7 @@
       font-weight: 650;
     }
     .check-item input { width: 16px; height: 16px; accent-color: var(--green); }
+    .check-item:has(input:disabled) { color: #8b948f; background: #f1f3f2; cursor: not-allowed; }
     .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
     .btn {
       display: inline-flex;
@@ -346,13 +347,14 @@
     .run-state.running { color: var(--blue); background: var(--blue-soft); }
     .run-state.completed, .run-state.completed_with_warnings { color: var(--green); background: var(--green-soft); }
     .run-state.failed, .run-state.interrupted { color: var(--danger); background: var(--coral-soft); }
-    .agent-progress { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 5px; margin-top: 14px; }
+    .agent-progress { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; margin-top: 14px; }
     .agent-step { min-width: 0; padding: 8px 5px; border: 1px solid var(--line); border-radius: 5px; background: #fafbfa; text-align: center; }
     .agent-step b { display: block; overflow: hidden; color: var(--muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
     .agent-step span { display: block; margin-top: 2px; color: #8a948e; font-size: 8px; }
     .agent-step.running { border-color: #9db8d0; background: var(--blue-soft); }
     .agent-step.completed { border-color: #afd1c3; background: var(--green-soft); }
     .agent-step.warning { border-color: #dfc58d; background: var(--amber-soft); }
+    .agent-step.skipped { opacity: .68; background: #f1f3f2; }
     .agent-step.failed, .agent-step.interrupted { border-color: #dfb1a8; background: var(--coral-soft); }
     .run-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--line); }
     .run-note { color: var(--muted); font-size: 11px; }
@@ -711,6 +713,13 @@
                         <option>대한민국 시장만</option>
                         <option>글로벌 시장</option>
                       </select>
+                    </div>
+                    <div class="field">
+                      <label>선택 산출물</label>
+                      <label class="check-item" for="generateImages">
+                        <input id="generateImages" name="generateImages" type="checkbox">
+                        <span><strong>자사 제안 상품 사용 장면 생성</strong><br><span class="custom-hint" id="imageGenerationHint">기본 미선택 · 선택 시 Codex 이미지 생성 사용</span></span>
+                      </label>
                     </div>
                   </div>
                 </details>
@@ -1372,7 +1381,7 @@
       }
 
       function agentStatusLabel(status) {
-        return ({waiting: "대기", running: "진행", completed: "완료", warning: "확인", failed: "실패", interrupted: "중단", cancelled: "취소"})[status] || status;
+        return ({waiting: "대기", running: "진행", completed: "완료", warning: "확인", skipped: "미선택", failed: "실패", interrupted: "중단", cancelled: "취소"})[status] || status;
       }
 
       function renderResearchRuns() {
@@ -1417,7 +1426,7 @@
             '<div class="report-copy"><span class="report-type">' + escapeHtml(label) + '</span>' +
             '<h3>' + escapeHtml(job.request.product) + '</h3>' +
             '<p>' + escapeHtml(job.request.stage + " · " + job.request.decision) + '</p>' +
-            '<div class="report-meta"><span class="tag">근거 ' + escapeHtml((job.sources || []).length) + '개</span><span class="tag">' + escapeHtml(completed) + '</span><span class="tag">' + escapeHtml(job.mode === "codex" ? "사용자 Codex" : "데모") + '</span></div>' +
+            '<div class="report-meta"><span class="tag">근거 ' + escapeHtml((job.sources || []).length) + '개</span><span class="tag">' + escapeHtml(completed) + '</span><span class="tag">' + escapeHtml(job.mode === "codex" ? "사용자 Codex" : "데모") + '</span>' + (job.generatedImage?.url ? '<span class="tag">사용 장면 포함</span>' : '') + '</div>' +
             '<div class="report-links"><a class="btn primary" href="' + escapeHtml(job.reportUrl) + '" target="_blank" rel="noreferrer">보고서 열기</a></div></div>' +
           '</article>';
         }).join("");
@@ -1460,7 +1469,9 @@
           title.textContent = codex ? (ready ? "내 ChatGPT 계정으로 조사할 수 있습니다" : (accountConnected ? "고정 모델을 사용할 수 없습니다" : "ChatGPT 계정을 연결해 주세요")) : "데모 분석 실행 가능";
           const modelLabel = runtimeConfig.model + " · " + runtimeConfig.reasoningEffort;
           const fallbackNote = runtimeConfig.fallbackUsed ? " · Terra 미지원으로 GPT-5.5 대체 적용" : "";
-          copy.textContent = codex ? (ready ? ((accountLabel ? accountLabel + " · " : "") + modelLabel + fallbackNote + " · 사용량과 권한은 연결된 계정에 적용됩니다.") : (account.reason || "브라우저 로그인 후 사용자의 Codex가 " + modelLabel + " 설정으로 조사를 실행합니다.")) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
+          const imageReady = Boolean(runtimeConfig.capabilities?.imageGeneration);
+          const imageNote = imageReady ? " · 이미지 생성 선택 가능" : "";
+          copy.textContent = codex ? (ready ? ((accountLabel ? accountLabel + " · " : "") + modelLabel + fallbackNote + imageNote + " · 사용량과 권한은 연결된 계정에 적용됩니다.") : (account.reason || "브라우저 로그인 후 사용자의 Codex가 " + modelLabel + " 설정으로 조사를 실행합니다.")) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
           mode.textContent = codex ? (ready ? (runtimeConfig.fallbackUsed ? "GPT-5.5 · HIGH" : "TERRA · HIGH") : (accountConnected ? "모델 확인 필요" : "연결 필요")) : "DEMO";
           mode.classList.toggle("live", ready);
           panel.classList.toggle("connected", ready);
@@ -1469,6 +1480,10 @@
           connectChatGptButton.hidden = !codex || accountConnected;
           disconnectChatGptButton.hidden = !codex || !accountConnected;
           runResearchButton.disabled = !runtimeConfig.ready;
+          const imageInput = document.getElementById("generateImages");
+          imageInput.disabled = !imageReady;
+          if (!imageReady) imageInput.checked = false;
+          document.getElementById("imageGenerationHint").textContent = imageReady ? "기본 미선택 · 선택 시 사용자 Codex로 1장 생성" : "현재 계정 런타임에서는 사용할 수 없음";
         } catch (_) {
           runtimeConfig = null;
           title.textContent = "실행 엔진 연결 필요";
@@ -1479,6 +1494,9 @@
           connectChatGptButton.hidden = false;
           disconnectChatGptButton.hidden = true;
           runResearchButton.disabled = true;
+          document.getElementById("generateImages").disabled = true;
+          document.getElementById("generateImages").checked = false;
+          document.getElementById("imageGenerationHint").textContent = "실행 엔진 연결 후 사용 가능";
         }
       }
 
@@ -1553,7 +1571,8 @@
           evidence: checkedEvidence(),
           vocText: document.getElementById("vocText").value.trim(),
           sourceUrls: document.getElementById("sourceUrls").value.split(/\r?\n/).map((value) => value.trim()).filter(Boolean),
-          depth: document.getElementById("researchDepth").value
+          depth: document.getElementById("researchDepth").value,
+          generateImages: document.getElementById("generateImages").checked
         };
       }
 
@@ -1577,6 +1596,7 @@
           "- 모델/추론 강도: gpt-5.6-terra / high 우선, 미지원 시 gpt-5.5 / high",
           "- 제공 VOC: " + (data.vocText ? "있음" : "없음"),
           "- 우선 출처: " + (sourceUrls.length ? sourceUrls.length + "개" : "없음"),
+          "- 자사 제안 상품 사용 장면: " + (data.generateImages ? "생성" : "생성하지 않음"),
           "",
           "2. 담당 조직",
           "- 주관: " + task.lead,
@@ -1589,6 +1609,8 @@
           "- " + evidence,
           "- 실제 제품을 다루면 제품명, 판매 링크, 가격, 확인일, 출처 유형을 후보별로 맞출 것.",
           "- 매출 수치가 추정이면 입력값 출처, 산식, 기간, 가정, 범위, 한계를 함께 제시할 것.",
+          "- 경쟁 제품 매출은 공식 판매량·공개 매출 → 구매·주문 수 → 리뷰 수÷리뷰 작성률 → 조회 수×구매 전환율 → 댓글·좋아요·저장 신호 순으로 역산할 것.",
+          "- 공식 가격이 없으면 판매 페이지 표시 가격 → 동일 SKU 가격 → 동일 채널 가격 범위 순으로 적용하고 추정 가격임을 밝힐 것.",
           "- 유아용품은 연령·발달 단계와 안전·표현 경계를 먼저 확정할 것.",
           "",
           "5. 대표 보고 형식",
