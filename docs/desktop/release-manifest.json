@@ -12,13 +12,13 @@
   "artifacts": [
     {
       "name": "Marketing Research Companion-3.3.0-arm64.dmg",
-      "bytes": 119444785,
-      "sha256": "e83f1fdea27d18d330d2a10f549ded09a12232670265f51f8eb0c1e79271f725"
+      "bytes": 119444710,
+      "sha256": "3fe3f4bfc691ef80227f93bb352294aae1602a78d65f1ab6c8386144d3eaf4d5"
     },
     {
       "name": "Marketing Research Companion-3.3.0-arm64.zip",
       "bytes": 119514488,
-      "sha256": "ed5f7f92ad9c73142428450b934f250578eb71b9cade145973e84b97825d695f"
+      "sha256": "790f23d57af57dfbfee0904af489fae94cf69ec7a242bb9a1a3294c1b8a1e61b"
     }
   ],
   "asarSha256": "c7f809f0be01e32e1d4804da24415e643e9e1d598349caeffd1b0bcd5ddd9072"

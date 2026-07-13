@@ -54,8 +54,8 @@ confirmed that the app discovered the installed Codex binary, started
 
 | Artifact | Bytes | SHA-256 |
 | --- | ---: | --- |
-| `Marketing Research Companion-3.3.0-arm64.dmg` | 119,444,785 | `e83f1fdea27d18d330d2a10f549ded09a12232670265f51f8eb0c1e79271f725` |
-| `Marketing Research Companion-3.3.0-arm64.zip` | 119,514,488 | `ed5f7f92ad9c73142428450b934f250578eb71b9cade145973e84b97825d695f` |
+| `Marketing Research Companion-3.3.0-arm64.dmg` | 119,444,710 | `3fe3f4bfc691ef80227f93bb352294aae1602a78d65f1ab6c8386144d3eaf4d5` |
+| `Marketing Research Companion-3.3.0-arm64.zip` | 119,514,488 | `790f23d57af57dfbfee0904af489fae94cf69ec7a242bb9a1a3294c1b8a1e61b` |
 
 The app executable is a thin arm64 Mach-O. The ASAR integrity hash embedded in Info.plist is
 `c7f809f0be01e32e1d4804da24415e643e9e1d598349caeffd1b0bcd5ddd9072`.

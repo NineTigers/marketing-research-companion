@@ -32,7 +32,7 @@
     "desktop:dev": "electron .",
     "desktop:smoke": "MARKETING_RUNTIME=demo MARKETING_DESKTOP_SMOKE=1 electron .",
     "desktop:dir": "node desktop/create-icon.mjs && electron-builder --mac --arm64 --dir",
-    "desktop:build": "node desktop/create-icon.mjs && electron-builder --mac --arm64"
+    "desktop:build": "node desktop/create-icon.mjs && electron-builder --mac --arm64 --publish never"
   },
   "build": {
     "appId": "com.ninetigers.marketing-research-companion",
