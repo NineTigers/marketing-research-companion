@@ -1,5 +1,8 @@
 import {spawnSync} from "node:child_process";
 import {resolveCodexBin} from "../lib/codex-bin.mjs";
+import {loadConfig} from "../lib/config.mjs";
+
+const config = loadConfig();
 
 const failures = [];
 const major = Number.parseInt(process.versions.node.split(".")[0], 10);
@@ -17,6 +20,8 @@ if (version.error || version.status !== 0) {
   if (login.status !== 0 || !/ChatGPT/i.test(loginText)) failures.push("Codex에서 ChatGPT 계정 로그인이 필요합니다. 웹 화면에서 연결하거나 `codex login`을 실행하세요.");
   else console.log("OK  ChatGPT 계정으로 Codex 로그인됨");
 }
+
+console.log(`INFO 데이터 저장 위치: ${config.dataDir}`);
 
 if (failures.length) {
   console.error("\n준비가 필요한 항목:");

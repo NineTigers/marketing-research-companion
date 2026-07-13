@@ -3,12 +3,13 @@ import {spawnSync} from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import {fileURLToPath} from "node:url";
-import {resolveCodexBin} from "../lib/codex-bin.mjs";
+import {loadConfig} from "../lib/config.mjs";
 
 const action = process.argv[2];
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const config = loadConfig({rootDir: root});
 const nodeBin = process.execPath;
-const codexBin = resolveCodexBin(process.env.CODEX_BIN);
+const codexBin = config.codexBin;
 
 function run(command, args) {
   const result = spawnSync(command, args, {stdio: "inherit"});
@@ -21,6 +22,14 @@ function xml(value) {
 
 function systemdQuote(value) {
   return `"${String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"').replaceAll("%", "%%")}"`;
+}
+
+async function showRuntime() {
+  try {
+    const runtime = JSON.parse(await readFile(path.join(config.dataDir, "runtime.json"), "utf8"));
+    if (runtime.url) console.log(`서비스 URL: ${runtime.url}`);
+    console.log(`데이터 위치: ${config.dataDir}`);
+  } catch (_) { /* Service may not have completed startup yet. */ }
 }
 
 async function macService() {
@@ -36,10 +45,7 @@ async function macService() {
   }
   if (action === "status") {
     run("launchctl", ["print", `${domain}/${label}`]);
-    try {
-      const runtime = JSON.parse(await readFile(path.join(root, ".data", "runtime.json"), "utf8"));
-      if (runtime.url) console.log(`서비스 URL: ${runtime.url}`);
-    } catch (_) { /* Service may not have completed startup yet. */ }
+    await showRuntime();
     return;
   }
   await mkdir(dir, {recursive: true});
@@ -49,12 +55,12 @@ async function macService() {
 <key>Label</key><string>${label}</string>
 <key>ProgramArguments</key><array><string>${xml(nodeBin)}</string><string>${xml(path.join(root, "server.mjs"))}</string></array>
 <key>WorkingDirectory</key><string>${xml(root)}</string>
-<key>EnvironmentVariables</key><dict><key>CODEX_BIN</key><string>${xml(codexBin)}</string><key>HOST</key><string>127.0.0.1</string><key>PORT</key><string>8787</string></dict>
+<key>EnvironmentVariables</key><dict><key>CODEX_BIN</key><string>${xml(codexBin)}</string><key>HOST</key><string>127.0.0.1</string><key>PORT</key><string>8787</string><key>DATA_DIR</key><string>${xml(config.dataDir)}</string></dict>
 <key>RunAtLoad</key><true/><key>KeepAlive</key><true/>
-<key>StandardOutPath</key><string>${xml(path.join(root, ".data", "service.log"))}</string>
-<key>StandardErrorPath</key><string>${xml(path.join(root, ".data", "service-error.log"))}</string>
+<key>StandardOutPath</key><string>${xml(path.join(config.dataDir, "service.log"))}</string>
+<key>StandardErrorPath</key><string>${xml(path.join(config.dataDir, "service-error.log"))}</string>
 </dict></plist>`;
-  await mkdir(path.join(root, ".data"), {recursive: true});
+  await mkdir(config.dataDir, {recursive: true});
   await writeFile(file, plist, "utf8");
   spawnSync("launchctl", ["bootout", domain, file], {stdio: "ignore"});
   run("launchctl", ["bootstrap", domain, file]);
@@ -73,14 +79,12 @@ async function linuxService() {
   }
   if (action === "status") {
     run("systemctl", ["--user", "status", path.basename(file)]);
-    try {
-      const runtime = JSON.parse(await readFile(path.join(root, ".data", "runtime.json"), "utf8"));
-      if (runtime.url) console.log(`서비스 URL: ${runtime.url}`);
-    } catch (_) { /* Service may not have completed startup yet. */ }
+    await showRuntime();
     return;
   }
   await mkdir(dir, {recursive: true});
-  const unit = `[Unit]\nDescription=Marketing Research Companion\nAfter=network.target\n\n[Service]\nType=simple\nWorkingDirectory=${root}\nEnvironment=${systemdQuote(`CODEX_BIN=${codexBin}`)}\nEnvironment=HOST=127.0.0.1\nEnvironment=PORT=8787\nExecStart=${systemdQuote(nodeBin)} ${systemdQuote(path.join(root, "server.mjs"))}\nRestart=always\nRestartSec=3\n\n[Install]\nWantedBy=default.target\n`;
+  await mkdir(config.dataDir, {recursive: true});
+  const unit = `[Unit]\nDescription=Marketing Research Companion\nAfter=network.target\n\n[Service]\nType=simple\nWorkingDirectory=${root}\nEnvironment=${systemdQuote(`CODEX_BIN=${codexBin}`)}\nEnvironment=HOST=127.0.0.1\nEnvironment=PORT=8787\nEnvironment=${systemdQuote(`DATA_DIR=${config.dataDir}`)}\nExecStart=${systemdQuote(nodeBin)} ${systemdQuote(path.join(root, "server.mjs"))}\nRestart=always\nRestartSec=3\n\n[Install]\nWantedBy=default.target\n`;
   await writeFile(file, unit, "utf8");
   run("systemctl", ["--user", "daemon-reload"]);
   run("systemctl", ["--user", "enable", "--now", path.basename(file)]);

@@ -1,6 +1,6 @@
 {
-  "name": "marketing-research-team",
-  "version": "3.1.0",
+  "name": "marketing-research-companion",
+  "version": "3.2.0",
   "license": "MIT",
   "description": "Standalone marketing research, VOC analysis, and executive reporting application",
   "type": "module",
@@ -15,7 +15,6 @@
     "doctor": "node scripts/doctor.mjs",
     "service:install": "node scripts/service.mjs install",
     "service:status": "node scripts/service.mjs status",
-    "service:uninstall": "node scripts/service.mjs uninstall",
-    "release:export": "node scripts/export-release.mjs"
+    "service:uninstall": "node scripts/service.mjs uninstall"
   }
 }
