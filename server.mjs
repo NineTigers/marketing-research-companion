@@ -1,4 +1,5 @@
 import {createServer as createHttpServer} from "node:http";
+import {timingSafeEqual} from "node:crypto";
 import {createReadStream} from "node:fs";
 import {stat, writeFile} from "node:fs/promises";
 import path from "node:path";
@@ -9,6 +10,7 @@ import {createProvider} from "./lib/provider.mjs";
 import {FileStore} from "./lib/storage.mjs";
 import {createJobRecord, normalizeRequest, runResearchJob} from "./lib/workflow.mjs";
 import {GitUpdater} from "./lib/updater.mjs";
+import {isAllowedAuthUrl} from "./lib/url-policy.mjs";
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -66,6 +68,28 @@ function assertSameOrigin(req) {
   if (originHost !== req.headers.host) throw Object.assign(new Error("허용되지 않은 요청 출처입니다."), {statusCode: 403});
 }
 
+function assertLoopbackHost(req) {
+  let host;
+  try { host = new URL(`http://${req.headers.host || ""}`); }
+  catch (_) { throw Object.assign(new Error("허용되지 않은 요청 호스트입니다."), {statusCode: 403}); }
+  const hostnameAllowed = host.hostname === "127.0.0.1" || host.hostname === "localhost";
+  const expectedPort = String(req.socket.localPort || "");
+  const receivedPort = host.port || (expectedPort === "80" ? "80" : "");
+  if (!hostnameAllowed || receivedPort !== expectedPort) {
+    throw Object.assign(new Error("허용되지 않은 요청 호스트입니다."), {statusCode: 403});
+  }
+}
+
+function assertDesktopSession(req, expectedToken) {
+  if (!expectedToken) return;
+  const received = String(req.headers["x-marketing-desktop-session"] || "");
+  const expected = Buffer.from(expectedToken);
+  const candidate = Buffer.from(received);
+  if (candidate.length !== expected.length || !timingSafeEqual(candidate, expected)) {
+    throw Object.assign(new Error("데스크톱 앱 세션에서만 접근할 수 있습니다."), {statusCode: 403});
+  }
+}
+
 function publicJob(job) {
   if (!job) return null;
   const {reportDataPath, ...safe} = job;
@@ -102,13 +126,14 @@ export async function createMarketingServer(options = {}) {
   await store.init();
   const runtime = options.runtime || (config.mode === "codex" ? new CodexRuntime({
     codexBin: config.codexBin,
-    cwd: config.rootDir,
+    cwd: config.workDir,
     requestTimeoutMs: config.requestTimeoutMs
   }) : null);
   const provider = options.provider || createProvider(config, runtime);
   const updater = options.updater || new GitUpdater({rootDir: config.rootDir, version: config.version});
   const managedService = options.managedService ?? Boolean(process.env.XPC_SERVICE_NAME || process.env.INVOCATION_ID);
   const restartProcess = options.restartProcess || (() => process.exit(0));
+  const desktopSessionToken = options.desktopSessionToken || null;
   const activeRuns = new Map();
   let updateInProgress = false;
 
@@ -141,6 +166,8 @@ export async function createMarketingServer(options = {}) {
     const url = new URL(req.url || "/", "http://localhost");
     const pathname = url.pathname;
     try {
+      assertDesktopSession(req, desktopSessionToken);
+      assertLoopbackHost(req);
       assertSameOrigin(req);
       if (pathname === "/api/health" && req.method === "GET") {
         const runtimeState = await runtimeStatus();
@@ -154,11 +181,15 @@ export async function createMarketingServer(options = {}) {
       if (pathname === "/api/auth/chatgpt" && req.method === "POST") {
         if (config.mode !== "codex") return json(res, 409, {error: "데모 모드에서는 계정 연결을 사용하지 않습니다."});
         const login = await runtime.startChatGptLogin();
-        let authUrl;
-        try { authUrl = new URL(login.authUrl); }
-        catch (_) { throw Object.assign(new Error("Codex가 올바른 로그인 주소를 반환하지 않았습니다."), {statusCode: 502}); }
-        if (authUrl.protocol !== "https:") throw Object.assign(new Error("Codex가 안전한 로그인 주소를 반환하지 않았습니다."), {statusCode: 502});
+        if (!isAllowedAuthUrl(login.authUrl)) throw Object.assign(new Error("Codex가 허용된 ChatGPT 로그인 주소를 반환하지 않았습니다."), {statusCode: 502});
         return json(res, 200, {authUrl: login.authUrl, loginId: login.loginId, type: login.type});
+      }
+
+      if (pathname === "/api/auth/chatgpt/cancel" && req.method === "POST") {
+        if (config.mode !== "codex") return json(res, 409, {error: "데모 모드에서는 계정 연결을 사용하지 않습니다."});
+        const body = await readJson(req, config.maxBodyBytes);
+        await runtime.cancelLogin(String(body.loginId || ""));
+        return json(res, 200, {ok: true});
       }
 
       if (pathname === "/api/auth/logout" && req.method === "POST") {
@@ -172,11 +203,13 @@ export async function createMarketingServer(options = {}) {
       }
 
       if (pathname === "/api/update/check" && req.method === "POST") {
+        if (config.distribution === "desktop") return json(res, 409, {error: "데스크톱 설치본 업데이트는 서명된 배포 채널에서 제공됩니다."});
         if (updateInProgress) return json(res, 409, {error: "업데이트가 이미 진행 중입니다."});
         return json(res, 200, {update: await updater.check({fetchRemote: true})});
       }
 
       if (pathname === "/api/update/apply" && req.method === "POST") {
+        if (config.distribution === "desktop") return json(res, 409, {error: "데스크톱 설치본에서는 Git 파일 업데이트를 적용하지 않습니다."});
         if (updateInProgress) return json(res, 409, {error: "업데이트가 이미 진행 중입니다."});
         if (activeRuns.size) return json(res, 409, {error: "실행 중인 조사가 있습니다. 완료하거나 중단한 뒤 업데이트해 주세요."});
         updateInProgress = true;
@@ -280,7 +313,12 @@ export async function createMarketingServer(options = {}) {
     activeRuns.forEach((controller) => controller.abort());
     runtime?.close().catch(() => {});
   });
-  return {server, config, store, runtime, updater};
+  async function shutdown() {
+    activeRuns.forEach((controller) => controller.abort());
+    await runtime?.close().catch(() => {});
+    if (server.listening) await new Promise((resolve) => server.close(resolve));
+  }
+  return {server, config, store, runtime, updater, shutdown};
 }
 
 export async function listenWithFallback(server, host, preferredPort, attempts = 20) {

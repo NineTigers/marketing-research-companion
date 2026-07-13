@@ -1,0 +1,25 @@
+{
+  "product": "Marketing Research Companion",
+  "version": "3.3.0",
+  "status": "DEVELOPMENT_INSTALLER_READY",
+  "platform": "macOS arm64",
+  "applicationId": "com.ninetigers.marketing-research-companion",
+  "electron": "43.1.0",
+  "electronBuilder": "26.15.3",
+  "codexContractReviewed": "0.144.2",
+  "signed": false,
+  "notarized": false,
+  "artifacts": [
+    {
+      "name": "Marketing Research Companion-3.3.0-arm64.dmg",
+      "bytes": 119444785,
+      "sha256": "e83f1fdea27d18d330d2a10f549ded09a12232670265f51f8eb0c1e79271f725"
+    },
+    {
+      "name": "Marketing Research Companion-3.3.0-arm64.zip",
+      "bytes": 119514488,
+      "sha256": "ed5f7f92ad9c73142428450b934f250578eb71b9cade145973e84b97825d695f"
+    }
+  ],
+  "asarSha256": "c7f809f0be01e32e1d4804da24415e643e9e1d598349caeffd1b0bcd5ddd9072"
+}

@@ -30,6 +30,12 @@ Do not bind the built-in server to a public interface. A centralized or multi-te
 requires a separate identity layer, tenant isolation, encrypted storage, rate limiting, audit logs,
 and a security review; those controls are intentionally outside this local companion product.
 
+The desktop build adds a random per-launch capability header to every product-server request. The
+Electron session injects it and renderer JavaScript never receives it. Requests from another local
+browser or process are rejected. Desktop navigation stays on the product origin; HTTPS links open
+in the system browser, while ChatGPT authentication URLs are additionally restricted to approved
+OpenAI and ChatGPT domains. The renderer is sandboxed with Node integration disabled.
+
 ## Web updates
 
 The web updater accepts only the official `NineTigers/marketing-research-companion` origin, the
@@ -37,6 +43,10 @@ The web updater accepts only the official `NineTigers/marketing-research-compani
 force-reset local files, or update while research jobs are running. Diverged histories and local
 tracked changes require manual review. Keep the repository origin under the intended GitHub account;
 changing that remote changes the software supply source and disables the built-in updater.
+
+Packaged desktop builds do not use the Git updater. The current unsigned development installer has
+no customer auto-update channel. A public production installer requires Developer ID signing,
+notarization, and a reviewed package update channel.
 
 Report vulnerabilities privately to the repository owner. Never include Codex credentials,
 customer data, or unpublished product information in a public issue.
