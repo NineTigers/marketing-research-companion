@@ -624,7 +624,8 @@
           <div class="runtime-panel" id="runtimePanel">
             <div><strong id="runtimePanelTitle">사용자 Codex 연결 확인 중</strong><span id="runtimePanelCopy">ChatGPT 계정 상태를 확인하고 있습니다.</span></div>
             <div class="runtime-actions">
-              <button class="btn primary" type="button" id="connectChatGpt" hidden>ChatGPT로 연결</button>
+              <button class="btn primary" type="button" id="connectChatGpt" hidden>ChatGPT로 로그인</button>
+              <button class="btn" type="button" id="cancelChatGptLogin" hidden>로그인 취소</button>
               <button class="btn" type="button" id="disconnectChatGpt" hidden>연결 해제</button>
             </div>
             <span class="runtime-mode" id="runtimeMode">확인 중</span>
@@ -966,7 +967,7 @@
             <div>
               <p class="eyebrow">서비스 관리</p>
               <h2>설치본을 안전하게 최신 상태로 유지합니다</h2>
-              <p>공식 저장소의 main 브랜치와 비교하고, 로컬 변경이 없는 fast-forward 업데이트만 적용합니다.</p>
+              <p id="serviceUpdateIntro">공식 저장소의 main 브랜치와 비교하고, 로컬 변경이 없는 fast-forward 업데이트만 적용합니다.</p>
             </div>
           </div>
           <div class="service-control">
@@ -1052,6 +1053,7 @@
       const reportArchive = document.getElementById("reportArchive");
       const runResearchButton = document.getElementById("runResearch");
       const connectChatGptButton = document.getElementById("connectChatGpt");
+      const cancelChatGptLoginButton = document.getElementById("cancelChatGptLogin");
       const disconnectChatGptButton = document.getElementById("disconnectChatGpt");
       const checkUpdateButton = document.getElementById("checkUpdate");
       const applyUpdateButton = document.getElementById("applyUpdate");
@@ -1065,6 +1067,8 @@
       let researchJobs = [];
       let researchPollTimer = null;
       let updateState = null;
+      let pendingLoginId = null;
+      let loginPollingCancelled = false;
 
       const chartTypes = {
         bar: {label: "가로 막대", use: "순위와 크기 차이를 정확하게 비교"},
@@ -1517,19 +1521,21 @@
           const ready = Boolean(runtimeConfig.ready);
           const account = runtimeConfig.runtime || {};
           const accountConnected = account.accountType === "chatgpt";
+          const waitingForLogin = Boolean(pendingLoginId) && !accountConnected;
           const accountLabel = [account.email, account.planType].filter(Boolean).join(" · ");
-          title.textContent = codex ? (ready ? "내 ChatGPT 계정으로 조사할 수 있습니다" : (accountConnected ? "고정 모델을 사용할 수 없습니다" : "ChatGPT 계정을 연결해 주세요")) : "데모 분석 실행 가능";
+          title.textContent = codex ? (ready ? "내 ChatGPT 계정으로 조사할 수 있습니다" : (waitingForLogin ? "브라우저 승인을 기다리고 있습니다" : (accountConnected ? "고정 모델을 사용할 수 없습니다" : "ChatGPT 로그인이 필요합니다"))) : "데모 분석 실행 가능";
           const modelLabel = runtimeConfig.model + " · " + runtimeConfig.reasoningEffort;
           const fallbackNote = runtimeConfig.fallbackUsed ? " · Terra 미지원으로 GPT-5.5 대체 적용" : "";
           const imageReady = Boolean(runtimeConfig.capabilities?.imageGeneration);
           const imageNote = imageReady ? " · 이미지 생성 선택 가능" : "";
-          copy.textContent = codex ? (ready ? ((accountLabel ? accountLabel + " · " : "") + modelLabel + fallbackNote + imageNote + " · 사용량과 권한은 연결된 계정에 적용됩니다.") : (account.reason || "브라우저 로그인 후 사용자의 Codex가 " + modelLabel + " 설정으로 조사를 실행합니다.")) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
-          mode.textContent = codex ? (ready ? (runtimeConfig.fallbackUsed ? "GPT-5.5 · HIGH" : "TERRA · HIGH") : (accountConnected ? "모델 확인 필요" : "연결 필요")) : "DEMO";
+          copy.textContent = codex ? (ready ? ((accountLabel ? accountLabel + " · " : "") + modelLabel + fallbackNote + imageNote + " · 사용량과 권한은 연결된 계정에 적용됩니다.") : (waitingForLogin ? "시스템 브라우저에서 ChatGPT 승인을 완료하거나 이 요청을 취소할 수 있습니다." : (account.reason || "브라우저 로그인 후 사용자의 Codex가 " + modelLabel + " 설정으로 조사를 실행합니다."))) : "기능 확인용 데모이며 현재 시장 사실로 사용하지 않습니다.";
+          mode.textContent = codex ? (ready ? (runtimeConfig.fallbackUsed ? "GPT-5.5 · HIGH" : "TERRA · HIGH") : (waitingForLogin ? "승인 대기" : (accountConnected ? "모델 확인 필요" : "로그인 필요"))) : "DEMO";
           mode.classList.toggle("live", ready);
           panel.classList.toggle("connected", ready);
           metric.textContent = codex ? (ready ? (runtimeConfig.fallbackUsed ? "5.5/HIGH" : "TERRA/HIGH") : (accountConnected ? "모델 확인" : "연결 필요")) : "DEMO";
-          top.innerHTML = '<span class="dot"></span>' + (ready ? (runtimeConfig.fallbackUsed ? "GPT-5.5 · high 준비" : "Terra · high 준비") : (accountConnected ? "고정 모델 확인 필요" : "ChatGPT 연결 필요"));
-          connectChatGptButton.hidden = !codex || accountConnected;
+          top.innerHTML = '<span class="dot"></span>' + (ready ? (runtimeConfig.fallbackUsed ? "GPT-5.5 · high 준비" : "Terra · high 준비") : (waitingForLogin ? "브라우저 승인 대기" : (accountConnected ? "고정 모델 확인 필요" : "ChatGPT 로그인 필요")));
+          connectChatGptButton.hidden = !codex || accountConnected || waitingForLogin;
+          cancelChatGptLoginButton.hidden = !codex || !waitingForLogin;
           disconnectChatGptButton.hidden = !codex || !accountConnected;
           runResearchButton.disabled = !runtimeConfig.ready;
           const imageInput = document.getElementById("generateImages");
@@ -1537,6 +1543,17 @@
           if (!imageReady) imageInput.checked = false;
           document.getElementById("imageGenerationHint").textContent = imageReady ? "공식 이미지는 항상 수집 · 선택 시 제품별 동일 제품 사용 장면 생성" : "공식 이미지는 항상 수집 · AI 사용 장면은 현재 사용할 수 없음";
           document.getElementById("serviceVersion").textContent = runtimeConfig.version;
+          if (runtimeConfig.capabilities?.selfUpdate === false) {
+            checkUpdateButton.disabled = true;
+            applyUpdateButton.disabled = true;
+            document.getElementById("serviceUpdateIntro").textContent = "데스크톱 설치본은 Git 파일을 직접 바꾸지 않으며, 검증된 설치 패키지로 업데이트합니다.";
+            document.getElementById("updateStatusTitle").textContent = "데스크톱 배포 채널";
+            document.getElementById("updateStatusCopy").textContent = "현재 개발 설치본에는 자동 업데이트 채널이 연결되지 않았습니다.";
+            document.getElementById("serviceCurrentCommit").textContent = "설치 패키지 " + runtimeConfig.version;
+            document.getElementById("serviceLatestState").textContent = "배포 채널 대기";
+            document.getElementById("serviceLatestCommit").textContent = "서명 릴리스에서 제공";
+            document.getElementById("serviceEligibility").textContent = "자동 적용 안 함";
+          }
         } catch (_) {
           runtimeConfig = null;
           title.textContent = "실행 엔진 연결 필요";
@@ -1545,6 +1562,7 @@
           metric.textContent = "연결 필요";
           top.textContent = "실행 엔진 연결 필요";
           connectChatGptButton.hidden = false;
+          cancelChatGptLoginButton.hidden = true;
           disconnectChatGptButton.hidden = true;
           runResearchButton.disabled = true;
           document.getElementById("generateImages").disabled = true;
@@ -1557,29 +1575,50 @@
       connectChatGptButton.addEventListener("click", async () => {
         connectChatGptButton.disabled = true;
         connectChatGptButton.textContent = "로그인 여는 중";
+        loginPollingCancelled = false;
         try {
           const login = await fetchJson("/api/auth/chatgpt", {method: "POST"});
+          pendingLoginId = login.loginId;
+          await loadRuntimeConfig();
           const popup = window.open(login.authUrl, "_blank", "noopener,noreferrer");
-          if (!popup) window.location.href = login.authUrl;
+          if (!popup && runtimeConfig?.distribution !== "desktop") window.location.href = login.authUrl;
           showToast("브라우저에서 ChatGPT 로그인을 완료해 주세요.");
           for (let attempt = 0; attempt < 90; attempt += 1) {
             await new Promise((resolve) => setTimeout(resolve, 2000));
+            if (loginPollingCancelled) break;
             await loadRuntimeConfig();
             if (runtimeConfig?.ready) {
+              pendingLoginId = null;
               showToast("사용자 Codex가 연결됐습니다.");
               break;
             }
           }
+          if (pendingLoginId && !loginPollingCancelled) showToast("로그인 승인 시간이 만료됐습니다. 다시 시도해 주세요.");
         } catch (error) {
           showToast(error.message);
         } finally {
+          pendingLoginId = null;
+          await loadRuntimeConfig();
           connectChatGptButton.disabled = false;
-          connectChatGptButton.textContent = "ChatGPT로 연결";
+          connectChatGptButton.textContent = "ChatGPT로 로그인";
         }
       });
 
+      cancelChatGptLoginButton.addEventListener("click", async () => {
+        if (!pendingLoginId) return;
+        cancelChatGptLoginButton.disabled = true;
+        try {
+          await fetchJson("/api/auth/chatgpt/cancel", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({loginId: pendingLoginId})});
+          loginPollingCancelled = true;
+          pendingLoginId = null;
+          await loadRuntimeConfig();
+          showToast("ChatGPT 로그인을 취소했습니다.");
+        } catch (error) { showToast(error.message); }
+        finally { cancelChatGptLoginButton.disabled = false; }
+      });
+
       disconnectChatGptButton.addEventListener("click", async () => {
-        if (!window.confirm("이 기기의 Codex에서 ChatGPT 계정 연결을 해제할까요?")) return;
+        if (!window.confirm("이 기기의 Codex에서 ChatGPT 계정 연결을 해제할까요? 같은 Codex 로그인을 사용하는 다른 앱과 작업에도 영향을 줄 수 있습니다.")) return;
         try {
           await fetchJson("/api/auth/logout", {method: "POST"});
           await loadRuntimeConfig();
@@ -1644,6 +1683,7 @@
       }
 
       checkUpdateButton.addEventListener("click", async () => {
+        if (runtimeConfig?.capabilities?.selfUpdate === false) return;
         checkUpdateButton.disabled = true;
         applyUpdateButton.disabled = true;
         document.getElementById("updateStatusTitle").textContent = "업데이트 확인 중";
@@ -1661,6 +1701,7 @@
       });
 
       applyUpdateButton.addEventListener("click", async () => {
+        if (runtimeConfig?.capabilities?.selfUpdate === false) return;
         if (!updateState?.updateAvailable) return;
         if (!window.confirm("확인된 최신 버전을 적용할까요? 실행 중인 조사가 없을 때만 진행됩니다.")) return;
         checkUpdateButton.disabled = true;

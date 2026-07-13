@@ -1,6 +1,8 @@
 {
   "name": "marketing-research-companion",
-  "version": "3.2.0",
+  "version": "3.3.0",
+  "productName": "Marketing Research Companion",
+  "main": "desktop/main.mjs",
   "private": true,
   "license": "MIT",
   "description": "Standalone marketing research, VOC analysis, and executive reporting application",
@@ -15,16 +17,83 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.12.0"
   },
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "test": "node --test test/*.test.mjs",
-    "check": "node --check server.mjs && for file in lib/*.mjs scripts/*.mjs test/*.mjs; do node --check \"$file\" || exit 1; done && node scripts/check-index.mjs",
+    "check": "node --check server.mjs && for file in lib/*.mjs scripts/*.mjs desktop/*.mjs test/*.mjs; do node --check \"$file\" || exit 1; done && node scripts/check-index.mjs",
     "doctor": "node scripts/doctor.mjs",
     "service:install": "node scripts/service.mjs install",
     "service:status": "node scripts/service.mjs status",
-    "service:uninstall": "node scripts/service.mjs uninstall"
+    "service:uninstall": "node scripts/service.mjs uninstall",
+    "desktop": "electron .",
+    "desktop:dev": "electron .",
+    "desktop:smoke": "MARKETING_RUNTIME=demo MARKETING_DESKTOP_SMOKE=1 electron .",
+    "desktop:dir": "node desktop/create-icon.mjs && electron-builder --mac --arm64 --dir",
+    "desktop:build": "node desktop/create-icon.mjs && electron-builder --mac --arm64 --publish never"
+  },
+  "build": {
+    "appId": "com.ninetigers.marketing-research-companion",
+    "productName": "Marketing Research Companion",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "asar": true,
+    "afterPack": "desktop/after-pack.mjs",
+    "directories": {
+      "output": "release",
+      "buildResources": "desktop/assets"
+    },
+    "files": [
+      "index.html",
+      "server.mjs",
+      "lib/**/*.mjs",
+      "desktop/main.mjs",
+      "package.json",
+      "LICENSE"
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.business",
+      "icon": "desktop/assets/icon.png",
+      "identity": null,
+      "hardenedRuntime": false,
+      "extendInfo": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "127.0.0.1": {
+              "NSIncludesSubdomains": false,
+              "NSTemporaryExceptionAllowsInsecureHTTPLoads": true
+            },
+            "localhost": {
+              "NSIncludesSubdomains": false,
+              "NSTemporaryExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        }
+      }
+    },
+    "dmg": {
+      "sign": false
+    }
+  },
+  "devDependencies": {
+    "electron": "43.1.0",
+    "electron-builder": "26.15.3"
   }
 }

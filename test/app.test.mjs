@@ -11,13 +11,14 @@ import {escapeHtml, renderReport} from "../lib/report-renderer.mjs";
 import {FileStore} from "../lib/storage.mjs";
 import {createJobRecord, normalizeRequest, runResearchJob} from "../lib/workflow.mjs";
 import {createMarketingServer, startMarketingServer} from "../server.mjs";
-import {createServer as createHttpServer} from "node:http";
+import {createServer as createHttpServer, request as httpRequest} from "node:http";
 import {resolveCodexBin} from "../lib/codex-bin.mjs";
 import {calculateSalesEstimate} from "../lib/commercial-calculator.mjs";
 import {collectOfficialProductImages, extractProductImageCandidates} from "../lib/product-images.mjs";
 import {renderCharts} from "../lib/chart-renderer.mjs";
 import {CodexRuntime} from "../lib/codex-runtime.mjs";
 import {cleanRemote, GitUpdater} from "../lib/updater.mjs";
+import {isAllowedAuthUrl, isAllowedExternalUrl, isSameOriginUrl} from "../lib/url-policy.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -53,7 +54,7 @@ test("configuration pins Terra high without API secrets", async (t) => {
   const config = loadConfig({rootDir: root, env: {CODEX_MODEL: "test-model"}});
   const visible = publicConfig(config, {connected: true});
   assert.equal(config.productId, "marketing-research-companion");
-  assert.equal(config.version, "3.2.0");
+  assert.equal(config.version, "3.3.0");
   const pkg = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8"));
   assert.equal(config.version, pkg.version);
   assert.equal(pkg.scripts["release:export"], undefined);
@@ -78,6 +79,8 @@ test("configuration pins Terra high without API secrets", async (t) => {
   assert.equal("apiKey" in visible, false);
   assert.equal("baseUrl" in config, false);
   assert.equal(visible.persistence, "external-user-data");
+  assert.equal(visible.distribution, "web");
+  assert.equal(visible.capabilities.selfUpdate, true);
   assert.equal(typeof resolveCodexBin(), "string");
 });
 
@@ -88,6 +91,37 @@ test("default persistence is outside the source checkout and DATA_DIR remains ov
   assert.equal(external.dataDir.startsWith(root + path.sep), false);
   const overridden = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "demo", DATA_DIR: ".data"}});
   assert.equal(overridden.dataDir, path.join(root, ".data"));
+  const desktop = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "demo", DATA_DIR: ".data", WORK_DIR: ".workspace", MARKETING_DISTRIBUTION: "desktop"}});
+  assert.equal(desktop.workDir, path.join(root, ".workspace"));
+  assert.equal(desktop.distribution, "desktop");
+  assert.equal(publicConfig(desktop, {connected: true}).capabilities.selfUpdate, false);
+});
+
+test("desktop URL policy limits authentication and navigation", () => {
+  assert.equal(isAllowedAuthUrl("https://auth.openai.com/oauth"), true);
+  assert.equal(isAllowedAuthUrl("https://chatgpt.com/auth"), true);
+  assert.equal(isAllowedAuthUrl("https://openai.com.evil.example/auth"), false);
+  assert.equal(isAllowedAuthUrl("https://evil.example/auth"), false);
+  assert.equal(isAllowedAuthUrl("javascript:alert(1)"), false);
+  assert.equal(isAllowedExternalUrl("https://example.com/source"), true);
+  assert.equal(isAllowedExternalUrl("http://example.com/source"), false);
+  assert.equal(isSameOriginUrl("http://127.0.0.1:8787/report", "http://127.0.0.1:8787"), true);
+  assert.equal(isSameOriginUrl("http://127.0.0.1:8788/report", "http://127.0.0.1:8787"), false);
+});
+
+test("desktop host keeps renderer privileges disabled", async () => {
+  const source = await readFile(path.join(process.cwd(), "desktop", "main.mjs"), "utf8");
+  assert.match(source, /contextIsolation: true/);
+  assert.match(source, /sandbox: true/);
+  assert.match(source, /nodeIntegration: false/);
+  assert.match(source, /requestSingleInstanceLock/);
+  assert.match(source, /defaultDataDir/);
+  assert.match(source, /X-Marketing-Desktop-Session/);
+  assert.match(source, /will-attach-webview/);
+  assert.equal(source.includes("enableRemoteModule"), false);
+  const afterPack = await readFile(path.join(process.cwd(), "desktop", "after-pack.mjs"), "utf8");
+  assert.match(afterPack, /NSAppTransportSecurity\.NSAllowsArbitraryLoads/);
+  assert.match(afterPack, /"NO"/);
 });
 
 test("request normalization rejects missing business scope", () => {
@@ -271,6 +305,20 @@ test("Codex image turns include local official-image references", async () => {
   assert.equal(result.savedPath, "/tmp/generated.png");
 });
 
+test("Codex OAuth requests use ChatGPT branding and can be cancelled", async () => {
+  const runtime = new CodexRuntime();
+  const calls = [];
+  runtime.request = async (method, params) => {
+    calls.push({method, params});
+    return method === "account/login/start" ? {type: "chatgpt", loginId: "login-1", authUrl: "https://auth.openai.com/example"} : {status: "cancelled"};
+  };
+  await runtime.startChatGptLogin();
+  await runtime.cancelLogin("login-1");
+  assert.deepEqual(calls[0], {method: "account/login/start", params: {type: "chatgpt", useHostedLoginSuccessPage: true, appBrand: "chatgpt"}});
+  assert.deepEqual(calls[1], {method: "account/login/cancel", params: {loginId: "login-1"}});
+  await assert.rejects(runtime.cancelLogin(""), /로그인 요청/);
+});
+
 test("Git updater detects and applies only clean fast-forward updates", async (t) => {
   const root = await tempRoot(t);
   const remote = path.join(root, "remote.git");
@@ -315,6 +363,7 @@ test("HTTP onboarding reports and starts the user's ChatGPT OAuth flow", async (
   const runtime = {
     status: async () => ({installed: true, connected: false, accountType: null, reason: "ChatGPT 계정을 연결해 주세요."}),
     startChatGptLogin: async () => ({type: "chatgpt", loginId: "login-1", authUrl: "https://auth.openai.com/example"}),
+    cancelLogin: async (loginId) => ({loginId}),
     logout: async () => {}, close: async () => {}
   };
   const {server} = await createMarketingServer({config, runtime, provider: new DemoProvider()});
@@ -327,6 +376,8 @@ test("HTTP onboarding reports and starts the user's ChatGPT OAuth flow", async (
   const login = await fetch(base + "/api/auth/chatgpt", {method: "POST"}).then((response) => response.json());
   assert.equal(login.loginId, "login-1");
   assert.match(login.authUrl, /^https:/);
+  const cancelled = await fetch(base + "/api/auth/chatgpt/cancel", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({loginId: login.loginId})}).then((response) => response.json());
+  assert.equal(cancelled.ok, true);
 });
 
 test("HTTP onboarding rejects an unsafe login URL", async (t) => {
@@ -334,7 +385,7 @@ test("HTTP onboarding rejects an unsafe login URL", async (t) => {
   const config = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "codex", DATA_DIR: ".data"}});
   const runtime = {
     status: async () => ({installed: true, connected: false, accountType: null}),
-    startChatGptLogin: async () => ({type: "chatgpt", loginId: "login-unsafe", authUrl: "javascript:alert(1)"}),
+    startChatGptLogin: async () => ({type: "chatgpt", loginId: "login-unsafe", authUrl: "https://openai.com.evil.example/login"}),
     close: async () => {}
   };
   const {server} = await createMarketingServer({config, runtime, provider: new DemoProvider()});
@@ -343,6 +394,23 @@ test("HTTP onboarding rejects an unsafe login URL", async (t) => {
   const base = `http://127.0.0.1:${server.address().port}`;
   const response = await fetch(base + "/api/auth/chatgpt", {method: "POST"});
   assert.equal(response.status, 502);
+});
+
+test("desktop HTTP server requires its capability token and disables Git updates", async (t) => {
+  const root = await tempRoot(t);
+  const config = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "demo", DATA_DIR: ".data", WORK_DIR: ".workspace", MARKETING_DISTRIBUTION: "desktop"}});
+  const updater = {check: async () => { throw new Error("must not run"); }, apply: async () => { throw new Error("must not run"); }};
+  const {server} = await createMarketingServer({config, provider: new DemoProvider(), updater, desktopSessionToken: "desktop-secret"});
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  assert.equal((await fetch(base + "/api/config")).status, 403);
+  const headers = {"x-marketing-desktop-session": "desktop-secret"};
+  const visible = await fetch(base + "/api/config", {headers}).then((response) => response.json());
+  assert.equal(visible.distribution, "desktop");
+  assert.equal(visible.capabilities.selfUpdate, false);
+  assert.equal((await fetch(base + "/api/update/check", {method: "POST", headers})).status, 409);
+  assert.equal((await fetch(base + "/api/update/apply", {method: "POST", headers})).status, 409);
 });
 
 test("HTTP API runs, persists, opens, retries, and deletes research", async (t) => {
@@ -367,6 +435,15 @@ test("HTTP API runs, persists, opens, retries, and deletes research", async (t) 
 
   const health = await fetch(base + "/api/health").then((response) => response.json());
   assert.deepEqual({ok: health.ok, mode: health.mode, ready: health.ready}, {ok: true, mode: "demo", ready: true});
+  const rejectedHostStatus = await new Promise((resolve, reject) => {
+    const req = httpRequest({host: "127.0.0.1", port: address.port, path: "/api/health", headers: {host: "evil.example"}}, (response) => {
+      response.resume();
+      resolve(response.statusCode);
+    });
+    req.on("error", reject);
+    req.end();
+  });
+  assert.equal(rejectedHostStatus, 403);
   const updateCheck = await fetch(base + "/api/update/check", {method: "POST"}).then((response) => response.json());
   assert.equal(updateCheck.update.updateAvailable, true);
   const updateApply = await fetch(base + "/api/update/apply", {method: "POST"}).then((response) => response.json());
