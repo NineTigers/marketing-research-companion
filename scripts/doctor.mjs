@@ -6,7 +6,7 @@ const config = loadConfig();
 
 const failures = [];
 const major = Number.parseInt(process.versions.node.split(".")[0], 10);
-if (major < 20) failures.push(`Node.js 20 이상이 필요합니다. 현재 ${process.versions.node}`);
+if (major < 22) failures.push(`Node.js 22 이상이 필요합니다. 현재 ${process.versions.node}`);
 else console.log(`OK  Node.js ${process.versions.node}`);
 
 const codexBin = resolveCodexBin(process.env.CODEX_BIN);

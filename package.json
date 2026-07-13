@@ -1,16 +1,26 @@
 {
   "name": "marketing-research-companion",
   "version": "3.2.0",
+  "private": true,
   "license": "MIT",
   "description": "Standalone marketing research, VOC analysis, and executive reporting application",
+  "author": "NineTigers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NineTigers/marketing-research-companion.git"
+  },
+  "homepage": "https://github.com/NineTigers/marketing-research-companion#readme",
+  "bugs": {
+    "url": "https://github.com/NineTigers/marketing-research-companion/issues"
+  },
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
-    "test": "node --test test",
+    "test": "node --test test/*.test.mjs",
     "check": "node --check server.mjs && for file in lib/*.mjs scripts/*.mjs test/*.mjs; do node --check \"$file\" || exit 1; done && node scripts/check-index.mjs",
     "doctor": "node scripts/doctor.mjs",
     "service:install": "node scripts/service.mjs install",

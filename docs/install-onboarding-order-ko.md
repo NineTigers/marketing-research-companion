@@ -15,7 +15,7 @@ https://github.com/NineTigers/marketing-research-companion
 1. 현재 운영체제, CPU 아키텍처, 사용 가능한 셸과 설치 권한을 확인해줘.
 2. 아래 시스템 요구사항을 실제 명령으로 점검해줘.
    - Git
-   - Node.js 20 이상
+   - Node.js 22 이상
    - Codex CLI 또는 macOS ChatGPT 데스크톱 앱에 포함된 Codex
    - Codex를 사용할 수 있는 ChatGPT 계정
 3. 이미 준비된 항목은 다시 설치하지 마.
