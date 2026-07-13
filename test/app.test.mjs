@@ -5,7 +5,7 @@ import {execFile} from "node:child_process";
 import {promisify} from "node:util";
 import os from "node:os";
 import path from "node:path";
-import {loadConfig, publicConfig} from "../lib/config.mjs";
+import {defaultDataDir, loadConfig, publicConfig} from "../lib/config.mjs";
 import {CodexProvider, DemoProvider} from "../lib/provider.mjs";
 import {escapeHtml, renderReport} from "../lib/report-renderer.mjs";
 import {FileStore} from "../lib/storage.mjs";
@@ -52,6 +52,11 @@ test("configuration pins Terra high without API secrets", async (t) => {
   const root = await tempRoot(t);
   const config = loadConfig({rootDir: root, env: {CODEX_MODEL: "test-model"}});
   const visible = publicConfig(config, {connected: true});
+  assert.equal(config.productId, "marketing-research-companion");
+  assert.equal(config.version, "3.2.0");
+  const pkg = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8"));
+  assert.equal(config.version, pkg.version);
+  assert.equal(pkg.scripts["release:export"], undefined);
   assert.equal(config.mode, "codex");
   assert.equal(visible.ready, true);
   assert.equal(visible.mode, "codex");
@@ -72,7 +77,17 @@ test("configuration pins Terra high without API secrets", async (t) => {
   assert.equal(imageVisible.capabilities.imageGeneration, true);
   assert.equal("apiKey" in visible, false);
   assert.equal("baseUrl" in config, false);
+  assert.equal(visible.persistence, "external-user-data");
   assert.equal(typeof resolveCodexBin(), "string");
+});
+
+test("default persistence is outside the source checkout and DATA_DIR remains overridable", async (t) => {
+  const root = await tempRoot(t);
+  const external = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "demo"}});
+  assert.equal(external.dataDir, defaultDataDir({env: {}}));
+  assert.equal(external.dataDir.startsWith(root + path.sep), false);
+  const overridden = loadConfig({rootDir: root, env: {MARKETING_RUNTIME: "demo", DATA_DIR: ".data"}});
+  assert.equal(overridden.dataDir, path.join(root, ".data"));
 });
 
 test("request normalization rejects missing business scope", () => {

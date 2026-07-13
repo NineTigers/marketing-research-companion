@@ -17,10 +17,12 @@ CLI and IDE sessions that share the same credential cache.
 
 ## Data
 
-Research requests may contain customer reviews, interviews, and internal product plans. Jobs and
-reports are stored under `.data` with owner-only file permissions where supported. Do not enter
-personal data without an approved retention policy. Delete `.data` before transferring a device or
-sharing a project copy.
+Research requests may contain customer reviews, interviews, and internal product plans. Jobs,
+reports, and assets are stored in the current operating-system user's application-data directory,
+outside the Git checkout. Files use owner-only permissions where supported. Do not enter personal
+data without an approved retention policy. Use `npm run doctor` to locate the data directory and
+remove that directory before transferring a device. Sharing a source checkout does not include the
+stored research data.
 
 ## Network boundary
 
